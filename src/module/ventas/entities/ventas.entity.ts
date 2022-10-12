@@ -1,6 +1,6 @@
 import { 
     PrimaryGeneratedColumn,
-    Column, 
+    Column,
     Entity,
     CreateDateColumn,
     UpdateDateColumn,
@@ -14,6 +14,7 @@ import { Usuarios } from "src/module/usuarios/entities/usuarios.entity";
 import { Locales } from "src/module/locales/entities/locales.entity";
 import { FormasPago } from "./formas_pago.entity";
 import { Comprobante } from "./comprobante.entity";
+import { CreditoDetalles } from "./credito_detalles.entity";
 
 enum EstadoVenta {
     cotizacion = "cotizacion",
@@ -36,8 +37,8 @@ export class Ventas {
     @PrimaryGeneratedColumn()
     id:number;
     
-    @Column({type: "varchar", length: 10, nullable: true})
-    serie:string;
+    // @Column({type: "varchar", length: 10, nullable: true})
+    // serie:string;
 
     @Column({type: "varchar", length: 12})
     tipo_venta:string;
@@ -50,9 +51,6 @@ export class Ventas {
 
     @Column({type: "varchar", length: 255})
     observaciones:string;
-
-    // @Column({type: "boolean"})
-    // igv:boolean;
 
     @Column({type: "decimal", precision: 10, scale: 2, default: 0})
     descuento_total:number;
@@ -67,14 +65,14 @@ export class Ventas {
     })
     estado_venta:EstadoVenta;
 
-    // @Column({
-    //     type: "enum",
-    //     enum: formaPago,
-    //     default: formaPago.efectivo
-    // })
-    // forma_pago:formaPago;
     @Column({type: "varchar", length: 25})
     forma_pago:string;
+
+    @Column({type: "boolean", default: true})
+    estado_producto:boolean;
+
+    @Column({type: "decimal", precision: 10, scale: 2, default: 0})
+    totalPagado:number;
 
 
     @CreateDateColumn()
@@ -84,7 +82,7 @@ export class Ventas {
     updated_at: Date;
 
 
-
+    // relaciones
     @ManyToOne(() => Clientes, (cliente) => cliente.ventas)
     clientes:number;
 
@@ -105,6 +103,9 @@ export class Ventas {
     
     @OneToMany(() => Comprobante, comprobante => comprobante.ventas, { onDelete: 'CASCADE' })
     comprobante:Comprobante[];
+
+    @OneToMany(() => CreditoDetalles, creditoDetalles => creditoDetalles.ventas)
+    creditoDetalles:CreditoDetalles[];
 
 
 

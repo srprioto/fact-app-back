@@ -182,7 +182,7 @@ export class ClientesService {
                     break;
                     
                 default:
-                    console.log("Tipo de documento inexistente");
+                    // console.log("Tipo de documento inexistente");
                     break;
 
             }

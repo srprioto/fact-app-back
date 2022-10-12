@@ -3,7 +3,8 @@ import {
     IsNumber,
     IsNotEmpty,
     IsBoolean,
-    IsOptional
+    IsOptional,
+    IsArray
 } from 'class-validator';
 
 import { PartialType } from '@nestjs/mapped-types';
@@ -49,6 +50,18 @@ export class CreateVentasDto{
     ventaDetalles:any;
 
     @IsOptional()
+    @IsBoolean()
+    estado_producto:boolean;
+    
+    @IsOptional()
+    @IsNumber()
+    totalPagado:number;
+
+    @IsOptional()
+    @IsArray()
+    creditoDetalles:any;
+
+    @IsOptional()
     formasPago:any;
 
     @IsOptional()
@@ -92,7 +105,9 @@ export class AnularVentaDto {
 export const tipoVenta = {
     factura: "factura",
     boleta: "boleta",
-    venta_rapida: "venta rapida"
+    venta_rapida: "venta rapida",
+    credito: "credito",
+    adelanto: "adelanto",
 }
 
 // export class UpdateVentasDto {

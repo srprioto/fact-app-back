@@ -5,7 +5,7 @@ import * as moment from 'moment'; moment.locale('es');
 // import moment from 'moment';
 
 import { Ventas } from '../entities/ventas.entity';
-import { Usuarios } from 'src/module/usuarios/entities/usuarios.entity';
+// import { Usuarios } from 'src/module/usuarios/entities/usuarios.entity';
 import { Clientes } from '../entities/clientes.entity';
 import { AnularVentaDto, CreateVentasDto, tipoVenta, UpdateVentasDto } from '../dtos/ventas.dto';
 import { VentaDetallesService } from './venta-detalles.service';
@@ -21,6 +21,7 @@ import { CajaService } from 'src/module/locales/services/caja.service';
 import { VentasProviderService } from './ventas-provider.service';
 import { CajaDetallesService } from 'src/module/locales/services/caja-detalles.service';
 import { CorrelativoService } from './correlativo.service';
+import { CreditoDetallesService } from './credito-detalles.service';
 
 // import { getManager } from "typeorm";
 
@@ -39,9 +40,10 @@ export class VentasService {
         private comprobanteService:ComprobanteService,
         private ventaDetallesService:VentaDetallesService,
         private clientesService:ClientesService,
+        private ventasProviderService:VentasProviderService,
+        private creditoDetallesService:CreditoDetallesService,
         private formasPagoService:FormasPagoService,
         private cajaService:CajaService,
-        private ventasProviderService:VentasProviderService,
         private correlativoService:CorrelativoService
     ){ }
 
@@ -118,7 +120,17 @@ export class VentasService {
 
     async getOne(id:number){ // *** 
         const data:any = await this.ventasRepo.findOne(id,{
-            relations: ["clientes", "usuarios", "ventaDetalles", "ventaDetalles.productos", "locales", "locales.correlativos", "formasPago", "comprobante"]
+            relations: [
+                "clientes",
+                "usuarios",
+                "ventaDetalles",
+                "ventaDetalles.productos",
+                "locales",
+                "locales.correlativos",
+                "formasPago",
+                "comprobante",
+                "creditoDetalles"
+            ]
         });
 
         if (!!data.clientes) {
@@ -245,7 +257,7 @@ export class VentasService {
                 success: "Venta confirmada",
                 data: await this.editarConfirmarVenta(id, payload)
             }
-        } else { // crear y confirmar venta aqui, desde la tienda
+        } else { // crear y confirmar venta aqui, desde la creacion de pedido
             // IMPORTANTE: el id debe tener como 0 por defecto desde el frontend
             // this.crearVenta(payload);
         }
@@ -258,9 +270,30 @@ export class VentasService {
 
     async editarConfirmarVenta(id:number, payload:any){ // Confirma la venta
 
+        // estado_producto
+        // totalPagado
+        // creditoDetalles
+
+        // console.log(payload);        
+        // console.log("**************");
+        // console.log(!!payload.creditoDetalles);
+        // console.log("**************");
+        // console.log(payload.creditoDetalles);
+
+        const esCredito:boolean = (
+            !!payload.creditoDetalles && 
+            ( payload.tipo_venta === tipoVenta.credito || payload.tipo_venta === tipoVenta.adelanto )
+        );
+
+        const esComprobante:boolean = (
+            ( payload.tipo_venta === tipoVenta.boleta || payload.tipo_venta === tipoVenta.factura) && 
+            !!payload.comprobante
+        );
+
         const formasPago:any = payload.formasPago;
         const cliente = payload.cliente;
         let idCliente:number = 0;
+        let newCreditoDetalles:Array<any> = [];
 
         // gestion cliente
         if (!!cliente.id) { // el cliente existe
@@ -285,8 +318,8 @@ export class VentasService {
             venta.clientes = idCliente;
         }
 
-        // *** envio de comprobante ***
-        if (!!payload.comprobante && payload.tipo_venta !== tipoVenta.venta_rapida) { // envio comprobante sunat
+        // *** envio de comprobante sunat ***
+        if (esComprobante && !esCredito) {
             payload.comprobante.clientes.id = idCliente;
             await this.comprobanteService.enviarComprobanteSunat(payload.comprobante, payload.localId);
         }
@@ -307,6 +340,15 @@ export class VentasService {
             })
         }
 
+        // credito o adelanto
+        if (esCredito) {
+            await Promise.all(payload.creditoDetalles.map(async (e:any) => {
+                e.ventas = venta.id
+                const creditoDetall:any = await this.creditoDetallesService.crearCreditoAdelanto(e);
+                newCreditoDetalles.push(creditoDetall);
+            }));
+        }
+
         // caja
         const caja:any = await this.cajaRepo.findOne({
             where: {
@@ -316,9 +358,10 @@ export class VentasService {
         })
 
         // añadir dinero a caja
-        await this.cajaService.incrementoCaja(caja, formasPago, venta);
+        await this.cajaService.incrementoCaja(caja, formasPago, newCreditoDetalles, venta);
 
-        if (!!payload.envioComprobante) { // envio por correo electronico
+        // envio por correo electronico
+        if (!!payload.envioComprobante) { 
             await this.comprobanteService.comprobanteEnviarCorreo(payload.comprobante, payload.envioComprobante);
         }
 
@@ -328,7 +371,7 @@ export class VentasService {
 
 
     async anularVenta(idVenta:number, payload:any){
-        
+
         const venta:any = await this.ventasRepo.findOne(idVenta, { relations: ["comprobante", "locales"] });
         const comprobante:any = venta.comprobante.length > 0 ? venta.comprobante[0] : {}
         const locales:any = venta.locales ? venta.locales : {};
@@ -336,7 +379,7 @@ export class VentasService {
             relations: ["locales"],
             where: { locales: { id: locales.id, tipo_local: "tienda" }, estado_caja: true }
         });
-
+        const esCredito:boolean = (venta.tipo_venta === tipoVenta.credito || venta.tipo_venta === tipoVenta.adelanto);
         const montoCaja:number = Number(caja.monto_apertura) + Number(caja.monto_efectivo) + Number(caja.otros_montos);
 
         if (montoCaja < Number(venta.total)) {
@@ -344,7 +387,7 @@ export class VentasService {
             return true;
         } else {
             // aqui añadimos la anulacion de venta
-            if (venta.tipo_venta === tipoVenta.venta_rapida) {
+            if (venta.tipo_venta === tipoVenta.venta_rapida || esCredito) {
                 // anulacion de venta normal
                 await this.ventasProviderService.anulacionVenta(idVenta, payload.notaBaja, payload.usuarioId, payload.afectarCaja);
             } else {

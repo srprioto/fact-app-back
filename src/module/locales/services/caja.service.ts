@@ -6,6 +6,8 @@ import { CreateCajaDto } from '../dtos/caja.dto';
 import { Caja } from '../entities/caja.entity';
 import { Locales } from '../entities/locales.entity';
 import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
+import { tipoVenta } from 'src/module/ventas/dtos/ventas.dto';
+import { sumaArrayObj } from 'src/assets/functions/sumaArrayObj';
 
 @Injectable()
 export class CajaService {
@@ -106,13 +108,9 @@ export class CajaService {
         });
         
         if (cajasAbiertas.length > 0) {
-            return {
-                data: true
-            };
+            return { data: true };
         } else {
-            return {
-                data: false
-            };
+            return { data: false };
         }   
     }
 
@@ -179,7 +177,19 @@ export class CajaService {
     }
 
 
-    async incrementoCaja(caja:any, formasPago:any, venta:any){
+    async incrementoCaja(caja:any, formasPago:any, creditoDetalles:any, venta:any){ // requiere creditoDetalles
+
+        const esCredito:boolean = (
+            !!creditoDetalles &&
+            ( venta.tipo_venta === tipoVenta.credito || venta.tipo_venta === tipoVenta.adelanto )
+        );
+        let anadirCajaTotal:number = 0;
+        
+        if (esCredito) {
+            anadirCajaTotal = sumaArrayObj(creditoDetalles, "cantidad_pagada");
+        } else {
+            anadirCajaTotal = venta.total;
+        }   
 
         if (formasPago.length > 0) {
             formasPago.forEach(async (e:any) => { 
@@ -195,22 +205,35 @@ export class CajaService {
             })
         } else {
             if (venta.forma_pago === "efectivo") {
-                caja.monto_efectivo = Number(caja.monto_efectivo) + Number(venta.total);
+                caja.monto_efectivo = Number(caja.monto_efectivo) + Number(anadirCajaTotal);
             } else if (venta.forma_pago === "tarjeta") {
-                caja.monto_tarjeta = Number(caja.monto_tarjeta) + Number(venta.total);
+                caja.monto_tarjeta = Number(caja.monto_tarjeta) + Number(anadirCajaTotal);
             } else if (venta.forma_pago === "pago_electronico") {
-                caja.monto_pago_electronico = Number(caja.monto_pago_electronico) + Number(venta.total);
+                caja.monto_pago_electronico = Number(caja.monto_pago_electronico) + Number(anadirCajaTotal);
             } else if (venta.forma_pago === "deposito") {
-                caja.monto_deposito = Number(caja.monto_deposito) + Number(venta.total);
+                caja.monto_deposito = Number(caja.monto_deposito) + Number(anadirCajaTotal);
             }
         }
 
         await this.cajaRepo.save(caja);
 
     }
-
     
-    async descuentoCaja(caja:any, formasPago:any, venta:any){
+    
+    async descuentoCaja(caja:any, formasPago:any, creditoDetalles:any, venta:any){ // requiere creditoDetalles
+
+        const esCredito:boolean = (
+            !!creditoDetalles &&
+            ( venta.tipo_venta === tipoVenta.credito || venta.tipo_venta === tipoVenta.adelanto )
+        );
+        let anadirCajaTotal:number = 0;
+        
+        if (esCredito) {
+            anadirCajaTotal = sumaArrayObj(creditoDetalles, "cantidad_pagada");
+        } else {
+            anadirCajaTotal = venta.total;
+        }   
+
         if (formasPago.length > 0) {
             formasPago.forEach(async (e:any) => { 
                 if (e.forma_pago === "efectivo") {

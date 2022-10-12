@@ -19,7 +19,7 @@ export class VentasProviderService {
     async anulacionVenta(idVenta:number, notaBaja:string, usuarioId:number, afectarCaja:boolean){
 
         // actualizar y anular venta
-        const venta:any = await this.ventasRepo.findOne(idVenta, { relations: ["locales", "formasPago"] });
+        const venta:any = await this.ventasRepo.findOne(idVenta, { relations: ["locales", "formasPago", "creditoDetalles"] });
         venta.estado_venta = "anulado";
         venta.observaciones = notaBaja;
         const newVenta:any = this.ventasRepo.create(venta);
@@ -35,7 +35,7 @@ export class VentasProviderService {
                 }
             })
 
-            await this.cajaService.descuentoCaja(caja, venta.formasPago, venta);
+            await this.cajaService.descuentoCaja(caja, venta.formasPago, venta.creditoDetalles, venta);
 
             await this.cajaDetallesService.registrarAnulacionCajaDet({
                 monto_movimiento: Number("-" + venta.total),
