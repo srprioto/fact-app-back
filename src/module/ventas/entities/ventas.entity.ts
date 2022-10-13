@@ -71,8 +71,8 @@ export class Ventas {
     @Column({type: "boolean", default: true})
     estado_producto:boolean;
 
-    @Column({type: "decimal", precision: 10, scale: 2, default: 0})
-    totalPagado:number;
+    // @Column({type: "decimal", precision: 10, scale: 2, default: 0})
+    // totalPagado:number;
 
 
     @CreateDateColumn()

@@ -91,21 +91,6 @@ export class ComprobanteService {
     }
 
 
-    async getOne(id:number) {
-        const data:any = await this.comprobanteRepo.findOne(id,{
-            relations: ["clientes", "locales", "comprobanteDetalles", "ventas", "correlativos"]
-        });
-
-        const resSunat = JSON.parse(data.respuesta_sunat)
-        data.respuesta_sunat = resSunat;
-
-        return{
-            success: "Registro encontrado",
-            data
-        }
-    }
-
-    
     async searchData(value:string, idLocal:string){
 
         const where:any = [
@@ -118,10 +103,27 @@ export class ComprobanteService {
         }
 
         const data = await this.comprobanteRepo.find({
+            relations: ["locales", "ventas", "correlativos"],
+            order: { id: "DESC" },
             where: where
         });
 
         return data;
+    }
+
+
+    async getOne(id:number) {
+        const data:any = await this.comprobanteRepo.findOne(id,{
+            relations: ["clientes", "locales", "comprobanteDetalles", "ventas", "correlativos"]
+        });
+
+        const resSunat = JSON.parse(data.respuesta_sunat)
+        data.respuesta_sunat = resSunat;
+
+        return{
+            success: "Registro encontrado",
+            data
+        }
     }
 
     

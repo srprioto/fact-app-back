@@ -64,7 +64,6 @@ export class VentasService {
         options: IPaginationOptions
     ): Promise<Pagination<Ventas>> {
 
-
         const where:any = {
             estado_venta: Not("cotizacion")
         };
@@ -79,20 +78,64 @@ export class VentasService {
             where.created_at = Between(inicio, fin);
         }
 
-        return paginate<Ventas>(this.ventasRepo, options, {
-            relations: ["locales", "comprobante"],
+        const ventas:any = await paginate<Ventas>(this.ventasRepo, options, {
+            relations: ["locales", "comprobante", "creditoDetalles"],
             order: { id: "DESC" },
             where: where
         });
+
+        // añadir cantidad pagada a ventas
+        const resto:any = ventas.items.map((e:any) => {
+            let elemento:any = e;
+            elemento.totalPagado = sumaArrayObj(e.creditoDetalles, "cantidad_pagada");
+            delete elemento.creditoDetalles;
+            return elemento;
+        });
         
+        ventas.items = resto;
+
+        return ventas;
+
+    }
+
+
+    async searchData(value:string, idLocal:string){ // busqueda general
+
+        const where:any = [
+            {
+                id: Like(`%${value}%`),   
+                estado_venta: Not("cotizacion")
+            },    
+            {
+                codigo_venta: Like(`%${value}%`),
+                estado_venta: Not("cotizacion")
+            },    
+        ]
+
+        if (idLocal != "_") {
+            where.locales = idLocal;
+        }
+
+        const data = await this.ventasRepo.find({
+            relations: ["locales", "comprobante", "creditoDetalles"],
+            order: { id: "DESC" },
+            where: where
+        });
+
+        // añadir cantidad pagada a ventas
+        const resto:any = data.map((e:any) => {
+            let elemento:any = e;
+            elemento.totalPagado = sumaArrayObj(e.creditoDetalles, "cantidad_pagada");
+            delete elemento.creditoDetalles;
+            return elemento;
+        });
+
+        return resto;
     }
 
 
     async getAll(){
-        const data = await this.ventasRepo.find({
-            // relations: ["clientes"],
-            order: { id: "DESC" }
-        });
+        const data = await this.ventasRepo.find({ order: { id: "DESC" } });
         return{
             success: "Lista registros encontrados",
             data
@@ -149,24 +192,7 @@ export class VentasService {
     }
 
 
-    async searchData(value:string, idLocal:string){ // busqueda general
-        const where:any = {
-            codigo_venta: Like(`%${value}%`),
-            estado_venta: Not("cotizacion")
-        };
 
-        if (idLocal != "_") {
-            where.locales = idLocal;
-        }
-
-        const data = await this.ventasRepo.find({
-            where: [
-                where
-            ]
-        });
-
-        return data;
-    }
     
 
     async searchDataLocal(value:string, idLocal:number){ // buscar venta para cobrar
@@ -269,16 +295,6 @@ export class VentasService {
     }
 
     async editarConfirmarVenta(id:number, payload:any){ // Confirma la venta
-
-        // estado_producto
-        // totalPagado
-        // creditoDetalles
-
-        // console.log(payload);        
-        // console.log("**************");
-        // console.log(!!payload.creditoDetalles);
-        // console.log("**************");
-        // console.log(payload.creditoDetalles);
 
         const esCredito:boolean = (
             !!payload.creditoDetalles && 
@@ -636,7 +652,7 @@ export class VentasService {
     }
 
 
-    // ventas se la semana, todos os productos que se venden
+    // ventas se la semana, todos los productos que se venden
     async ventasSemana(){
 
         // let ventasSemana:Array<any> = [];

@@ -44,6 +44,11 @@ export class VentasController {
         });
     }
 
+    @Post('search/:idLocal')
+    searchData(@Body() payload:any, @Param('idLocal') idLocal:string){
+        return this.ventasService.searchData(payload.value, idLocal);
+    }
+
     @Get()
     getAll(){
         return this.ventasService.getAll();
@@ -72,11 +77,6 @@ export class VentasController {
     @Put('anular/:id')
     putAnularVenta(@Param('id', ParseIntPipe) id:number, @Body() payload:AnularVentaDto){ 
         return this.ventasService.anularVenta(id, payload);
-    }
-
-    @Post('search/:idLocal')
-    searchData(@Body() payload:any, @Param('idLocal') idLocal:string){
-        return this.ventasService.searchData(payload.value, idLocal);
     }
 
     @Post('search/local/:idLocal')
