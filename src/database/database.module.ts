@@ -3,29 +3,28 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Global()
 @Module({
-
     imports: [
         TypeOrmModule.forRootAsync({
             useFactory: () => {
-                return { 
+                return {
                     type: 'mysql',
-                    host: process.env.HOSTNAME, 
+                    host: process.env.HOSTNAME,
                     port: parseInt(process.env.PORT_DB), 
                     username: process.env.USER,
                     password: process.env.PASSWORD,
                     database: process.env.DATABASE,
                     synchronize: false, 
-                    autoLoadEntities: true
+                    autoLoadEntities: true,
+                    // timezone: 'America/Lima'
                 };
             }
-        })
+        }),
     ],
     providers: [],
     exports: [TypeOrmModule]
 
 })
 export class DatabaseModule {}
-
 
 
 

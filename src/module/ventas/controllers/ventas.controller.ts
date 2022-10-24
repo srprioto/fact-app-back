@@ -74,6 +74,11 @@ export class VentasController {
         return this.ventasService.confirmarVenta(id, payload);
     }
 
+    @Put('cambiar_tipo_venta/:id')
+    putCambiarTipoVenta(@Param('id', ParseIntPipe) id:number, @Body() payload:any){
+        return this.ventasService.cambiarTipoVenta(id, payload);
+    }
+
     @Put('anular/:id')
     putAnularVenta(@Param('id', ParseIntPipe) id:number, @Body() payload:AnularVentaDto){ 
         return this.ventasService.anularVenta(id, payload);

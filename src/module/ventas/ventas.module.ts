@@ -31,6 +31,7 @@ import { CorrelativoService } from './services/correlativo.service';
 import { CorrelativoController } from './controllers/correlativo.controller';
 import { CreditoDetallesService } from './services/credito-detalles.service';
 import { CreditoDetalles } from './entities/credito_detalles.entity';
+import { CreditoDetallesController } from './controllers/credito-detalles.controller';
 
 
 @Module({
@@ -50,7 +51,7 @@ import { CreditoDetalles } from './entities/credito_detalles.entity';
         ])
     ],
     providers: [ClientesService, VentaDetallesService, VentasService, FormasPagoService, ComprobanteService, ComprobanteDetallesService, VentasProviderService, CotizacionesService, CorrelativoService, CreditoDetallesService],
-    controllers: [ClientesController, VentaDetallesController, VentasController, ComprobanteController, CotizacionesController, CorrelativoController],
+    controllers: [ClientesController, VentaDetallesController, VentasController, ComprobanteController, CotizacionesController, CorrelativoController, CreditoDetallesController],
     exports: [VentasService]
 })
 export class VentasModule {}

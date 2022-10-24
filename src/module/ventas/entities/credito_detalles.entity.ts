@@ -20,8 +20,11 @@ export class CreditoDetalles {
     @Column({type: "varchar", length: 255})
     nota:string;
 
-    @Column({ type: 'date' })
+    @Column({type: "timestamp"})
     fecha_estimada:Date;
+
+    @Column({type: "boolean"})
+    estado:boolean;
     
 
     @CreateDateColumn()

@@ -7,7 +7,7 @@ import * as moment from 'moment'; moment.locale('es');
 import { Ventas } from '../entities/ventas.entity';
 // import { Usuarios } from 'src/module/usuarios/entities/usuarios.entity';
 import { Clientes } from '../entities/clientes.entity';
-import { AnularVentaDto, CreateVentasDto, tipoVenta, UpdateVentasDto } from '../dtos/ventas.dto';
+import { tipoVenta, UpdateVentasDto } from '../dtos/ventas.dto';
 import { VentaDetallesService } from './venta-detalles.service';
 import { ClientesService } from './clientes.service';
 
@@ -19,12 +19,10 @@ import { FormasPagoService } from './formas-pago.service';
 import { ComprobanteService } from './comprobante.service';
 import { CajaService } from 'src/module/locales/services/caja.service';
 import { VentasProviderService } from './ventas-provider.service';
-import { CajaDetallesService } from 'src/module/locales/services/caja-detalles.service';
-import { CorrelativoService } from './correlativo.service';
+// import { CorrelativoService } from './correlativo.service';
 import { CreditoDetallesService } from './credito-detalles.service';
-
+// import { setTimezone } from 'src/assets/functions/timezone';
 // import { getManager } from "typeorm";
-
 
 var xl = require('excel4node');
 
@@ -44,9 +42,14 @@ export class VentasService {
         private creditoDetallesService:CreditoDetallesService,
         private formasPagoService:FormasPagoService,
         private cajaService:CajaService,
-        private correlativoService:CorrelativoService
-    ){ }
+        // private correlativoService:CorrelativoService
+    ){}
 
+
+    // async changeTimezome(){
+    //     const entityManager = getManager();
+    //     await entityManager.query(`SET time_zone = '-05:00'`);
+    // }
 
     // async paginate(options: IPaginationOptions): Promise<Pagination<Ventas>> {
     //     return paginate<Ventas>(this.ventasRepo, options, {
@@ -87,7 +90,9 @@ export class VentasService {
         // añadir cantidad pagada a ventas
         const resto:any = ventas.items.map((e:any) => {
             let elemento:any = e;
-            elemento.totalPagado = sumaArrayObj(e.creditoDetalles, "cantidad_pagada");
+            if (e.creditoDetalles) {
+                elemento.totalPagado = sumaArrayObj(e.creditoDetalles, "cantidad_pagada");    
+            }
             delete elemento.creditoDetalles;
             return elemento;
         });
@@ -125,12 +130,48 @@ export class VentasService {
         // añadir cantidad pagada a ventas
         const resto:any = data.map((e:any) => {
             let elemento:any = e;
-            elemento.totalPagado = sumaArrayObj(e.creditoDetalles, "cantidad_pagada");
+            if (e.creditoDetalles) {
+                elemento.totalPagado = sumaArrayObj(e.creditoDetalles, "cantidad_pagada");    
+            }
             delete elemento.creditoDetalles;
             return elemento;
         });
 
         return resto;
+    }
+
+
+    async getOne(id:number){
+        const data:any = await this.ventasRepo.findOne(id,{
+            relations: [
+                "clientes",
+                "usuarios",
+                "ventaDetalles",
+                "ventaDetalles.productos",
+                "locales",
+                "locales.correlativos",
+                "formasPago",
+                "comprobante",
+                "creditoDetalles"
+            ]
+        });
+
+        if (!!data.clientes) {
+            data.clientes.estadoCliente = "Registrado"
+        }
+
+        // añadir cantidad pagada a ventas
+        if (data.creditoDetalles) {
+            data.totalPagado = sumaArrayObj(data.creditoDetalles, "cantidad_pagada");    
+        }
+
+        // invertir orden de credito
+        data.creditoDetalles = data.creditoDetalles.reverse();
+
+        return{
+            success: "Registro encontrado",
+            data
+        }
     }
 
 
@@ -161,40 +202,6 @@ export class VentasService {
     }
 
 
-    async getOne(id:number){ // *** 
-        const data:any = await this.ventasRepo.findOne(id,{
-            relations: [
-                "clientes",
-                "usuarios",
-                "ventaDetalles",
-                "ventaDetalles.productos",
-                "locales",
-                "locales.correlativos",
-                "formasPago",
-                "comprobante",
-                "creditoDetalles"
-            ]
-        });
-
-        if (!!data.clientes) {
-            data.clientes.estadoCliente = "Registrado"
-        }
-
-        // const entityManager = getManager();
-        // const qur = await entityManager.query(`select * from usuarios`);
-
-        // console.log(qur);
-
-        return{
-            success: "Registro encontrado",
-            data
-        }
-    }
-
-
-
-    
-
     async searchDataLocal(value:string, idLocal:number){ // buscar venta para cobrar
         
         const data = await this.ventasRepo.find({
@@ -213,6 +220,8 @@ export class VentasService {
     // gestion de productos
     async crearVenta(payload:any){ // crear una venta
 
+        // setTimezone() // automatizar
+
         // buscar caja
         const caja:any = await this.cajaRepo.findOne({
             relations: ["locales"],
@@ -228,10 +237,24 @@ export class VentasService {
         if (caja) {
 
             // crear cliente
+            // let newCliente:any;
+            // if (payload.cliente.numero_documento) {
+            //     const cliente:any = this.clientesRepo.create(payload.cliente);
+            //     newCliente = await this.clientesRepo.save(cliente);
+            // }
+
             let newCliente:any;
             if (payload.cliente.numero_documento) {
-                const cliente:any = this.clientesRepo.create(payload.cliente);
-                newCliente = await this.clientesRepo.save(cliente);    
+                const searchCliente = await this.clientesRepo.findOne({
+                    where: {numero_documento: payload.cliente.numero_documento}
+                })
+                if (!!searchCliente) { // editar
+                    await this.clientesService.put(searchCliente.id, payload.cliente);
+                    newCliente = searchCliente;
+                } else { // crear
+                    const restoCliente:any = await this.clientesService.post(payload.cliente);
+                    newCliente = restoCliente.data;
+                }   
             }
 
             // crear codigo caja
@@ -311,18 +334,23 @@ export class VentasService {
         let idCliente:number = 0;
         let newCreditoDetalles:Array<any> = [];
 
+        // 
+        // if (!!cliente.id) { // el cliente existe
+        //     idCliente = cliente.id;
+        // //  && cliente.serie_documento
+        // } else 
+
         // gestion cliente
-        if (!!cliente.id) { // el cliente existe
-            idCliente = cliente.id;
-        //  && cliente.serie_documento
-        } else if (cliente.numero_documento){
+        if (cliente.numero_documento){
             const searchCliente = await this.clientesRepo.findOne({
                 where: {numero_documento: cliente.numero_documento}
             })
-            if (!!searchCliente) { // editar
+            if (!!searchCliente) { 
+                // editar cliente
                 await this.clientesService.put(searchCliente.id, cliente);
                 idCliente = searchCliente.id;
-            } else { // crear
+            } else { 
+                // crear cliente
                 const newCliente:any = await this.clientesService.post(cliente);
                 idCliente = newCliente.data.id;
             }   
@@ -386,6 +414,29 @@ export class VentasService {
     }
 
 
+    async cambiarTipoVenta(id:number, payload:any){ 
+
+        let newTipoVenta = "";
+        const venta:any = await this.ventasRepo.findOne(id);
+
+        // convertir a VENTA RAPIDA
+        venta.tipo_venta = payload.tipo_venta;
+        const resto:any = await this.ventasRepo.save(venta);
+        newTipoVenta = resto.tipo_venta;
+
+        // convertir a BOLETA
+
+
+        // convertir a FACTURA
+
+        return {
+            success: true,
+            id: venta.id,
+            tipo_venta: newTipoVenta
+        };    
+    }
+
+
     async anularVenta(idVenta:number, payload:any){
 
         const venta:any = await this.ventasRepo.findOne(idVenta, { relations: ["comprobante", "locales"] });
@@ -418,7 +469,6 @@ export class VentasService {
                 } else if (venta.tipo_venta === tipoVenta.boleta) {
                     // // anular boleta
                     const response:any = await this.comprobanteService.anularBoleta(comprobante.id, payload);
-                    // console.log(response);
                     if (response.estado === "Anulado" || response.estado === "Anulacion procesada") {
                         // anular venta
                         await this.ventasProviderService.anulacionVenta(idVenta, payload.notaBaja, payload.usuarioId, payload.afectarCaja);    

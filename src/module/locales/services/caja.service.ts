@@ -179,11 +179,11 @@ export class CajaService {
 
     async incrementoCaja(caja:any, formasPago:any, creditoDetalles:any, venta:any){ // requiere creditoDetalles
 
+        let anadirCajaTotal:number = 0;
         const esCredito:boolean = (
             !!creditoDetalles &&
             ( venta.tipo_venta === tipoVenta.credito || venta.tipo_venta === tipoVenta.adelanto )
         );
-        let anadirCajaTotal:number = 0;
         
         if (esCredito) {
             anadirCajaTotal = sumaArrayObj(creditoDetalles, "cantidad_pagada");
@@ -222,11 +222,11 @@ export class CajaService {
     
     async descuentoCaja(caja:any, formasPago:any, creditoDetalles:any, venta:any){ // requiere creditoDetalles
 
+        let anadirCajaTotal:number = 0;
         const esCredito:boolean = (
             !!creditoDetalles &&
             ( venta.tipo_venta === tipoVenta.credito || venta.tipo_venta === tipoVenta.adelanto )
         );
-        let anadirCajaTotal:number = 0;
         
         if (esCredito) {
             anadirCajaTotal = sumaArrayObj(creditoDetalles, "cantidad_pagada");

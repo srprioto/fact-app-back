@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config'
 
 import { AppController } from './app.controller';
@@ -9,6 +9,7 @@ import { VentasModule } from './module/ventas/ventas.module';
 import { LocalesModule } from './module/locales/locales.module';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
+import { TimeZoneMiddleware } from './assets/middlewares/timeZoneMiddleware';
 
 const confModule = ConfigModule.forRoot({
     envFilePath: '.env',
@@ -16,8 +17,20 @@ const confModule = ConfigModule.forRoot({
 })
 
 @Module({
-  imports: [confModule, ProductosModule, UsuariosModule, VentasModule, LocalesModule, DatabaseModule, AuthModule],
-  controllers: [AppController],
-  providers: [AppService],
+	imports: [
+		confModule, 
+		ProductosModule, 
+		UsuariosModule, 
+		VentasModule, 
+		LocalesModule, 
+		DatabaseModule, 
+		AuthModule
+	],
+	controllers: [AppController],
+	providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule{
+	configure(consumer: MiddlewareConsumer) {
+		consumer.apply(TimeZoneMiddleware).forRoutes({ path: '*', method: RequestMethod.ALL })
+	}
+}

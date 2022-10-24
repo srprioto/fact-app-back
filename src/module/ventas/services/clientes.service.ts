@@ -93,11 +93,13 @@ export class ClientesService {
         }
     }
 
+    
     async delete(id:number){
         await this.clientesRepo.delete(id);
         return{ success: "Registro eliminado" }
     }
 
+    
     async searchData(value:string){
 
         const data = await this.clientesRepo.find({

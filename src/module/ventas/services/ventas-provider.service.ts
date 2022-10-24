@@ -5,6 +5,8 @@ import { CajaService } from 'src/module/locales/services/caja.service';
 import { Ventas } from '../entities/ventas.entity';
 import { Caja } from 'src/module/locales/entities/caja.entity';
 import { CajaDetallesService } from 'src/module/locales/services/caja-detalles.service';
+import { tipoVenta } from '../dtos/ventas.dto';
+import { sumaArrayObj } from 'src/assets/functions/sumaArrayObj';
 
 @Injectable()
 export class VentasProviderService {
@@ -20,6 +22,14 @@ export class VentasProviderService {
 
         // actualizar y anular venta
         const venta:any = await this.ventasRepo.findOne(idVenta, { relations: ["locales", "formasPago", "creditoDetalles"] });
+        let montoMovimiento:number = 0;
+
+        if (venta.tipo_venta === tipoVenta.credito || venta.tipo_venta === tipoVenta.adelanto) {
+            montoMovimiento = sumaArrayObj(venta.creditoDetalles, "cantidad_pagada");;
+        } else {
+            montoMovimiento = venta.total;
+        }
+
         venta.estado_venta = "anulado";
         venta.observaciones = notaBaja;
         const newVenta:any = this.ventasRepo.create(venta);
@@ -38,7 +48,7 @@ export class VentasProviderService {
             await this.cajaService.descuentoCaja(caja, venta.formasPago, venta.creditoDetalles, venta);
 
             await this.cajaDetallesService.registrarAnulacionCajaDet({
-                monto_movimiento: Number("-" + venta.total),
+                monto_movimiento: Number("-" + montoMovimiento),
                 descripcion: "anulacion@" + notaBaja,
                 cajaId: caja.id,
                 usuarioId: usuarioId
