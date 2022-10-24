@@ -30,7 +30,7 @@ export class VentasController {
     @Get("paginate/:value/:idLocal/:inicio/:fin/filtro")
     async index(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
-        @Query('limit', new DefaultValuePipe(12), ParseIntPipe) limit: number = 12,
+        @Query('limit', new DefaultValuePipe(15), ParseIntPipe) limit: number = 15,
         @Param('value') value:string,
         @Param('idLocal') idLocal:string,
         @Param('inicio') inicio:string,

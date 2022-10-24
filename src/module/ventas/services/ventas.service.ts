@@ -67,6 +67,8 @@ export class VentasService {
         options: IPaginationOptions
     ): Promise<Pagination<Ventas>> {
 
+        console.log(filtro === tipoVenta.credito);
+
         const where:any = {
             estado_venta: Not("cotizacion")
         };
@@ -80,6 +82,10 @@ export class VentasService {
         if (inicio !== "_" || fin !== "_" ) {
             where.created_at = Between(inicio, fin);
         }
+        if (filtro === tipoVenta.credito) {
+            where.estado_venta = "listo";
+            where.tipo_venta = filtro;
+        }
 
         const ventas:any = await paginate<Ventas>(this.ventasRepo, options, {
             relations: ["locales", "comprobante", "creditoDetalles"],
@@ -88,7 +94,7 @@ export class VentasService {
         });
 
         // añadir cantidad pagada a ventas
-        const resto:any = ventas.items.map((e:any) => {
+        const cantidadPagada:any = ventas.items.map((e:any) => {
             let elemento:any = e;
             if (e.creditoDetalles) {
                 elemento.totalPagado = sumaArrayObj(e.creditoDetalles, "cantidad_pagada");    
@@ -96,8 +102,7 @@ export class VentasService {
             delete elemento.creditoDetalles;
             return elemento;
         });
-        
-        ventas.items = resto;
+        ventas.items = cantidadPagada;
 
         return ventas;
 
@@ -114,7 +119,15 @@ export class VentasService {
             {
                 codigo_venta: Like(`%${value}%`),
                 estado_venta: Not("cotizacion")
-            },    
+            },
+            {
+                clientes: { nombre: Like(`%${value}%`) },
+                estado_venta: Not("cotizacion")
+            },
+            {
+                clientes: { numero_documento: Like(`%${value}%`) },
+                estado_venta: Not("cotizacion")
+            },
         ]
 
         if (idLocal != "_") {
@@ -122,10 +135,12 @@ export class VentasService {
         }
 
         const data = await this.ventasRepo.find({
-            relations: ["locales", "comprobante", "creditoDetalles"],
+            relations: ["locales", "comprobante", "creditoDetalles", "clientes"],
             order: { id: "DESC" },
             where: where
         });
+
+        console.log(data);        
 
         // añadir cantidad pagada a ventas
         const resto:any = data.map((e:any) => {
