@@ -67,8 +67,6 @@ export class VentasService {
         options: IPaginationOptions
     ): Promise<Pagination<Ventas>> {
 
-        console.log(filtro === tipoVenta.credito);
-
         const where:any = {
             estado_venta: Not("cotizacion")
         };
@@ -139,8 +137,6 @@ export class VentasService {
             order: { id: "DESC" },
             where: where
         });
-
-        console.log(data);        
 
         // añadir cantidad pagada a ventas
         const resto:any = data.map((e:any) => {

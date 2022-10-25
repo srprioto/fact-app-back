@@ -301,7 +301,7 @@ export class LocalesStockService {
 
             const items:any = await this.localesStockRepo.save(nuevoLocalStock)
 
-            console.log(items);            
+            // console.log(items);            
             
             // await this.anadirCantidadProductos(index, 2, 50);
 
