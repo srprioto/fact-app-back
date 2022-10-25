@@ -9,7 +9,8 @@ import { VentasModule } from './module/ventas/ventas.module';
 import { LocalesModule } from './module/locales/locales.module';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
-import { TimeZoneMiddleware } from './assets/middlewares/timeZoneMiddleware';
+import { TimeZoneMiddleware } from './assets/middlewares/TimeZoneMiddleware';
+// import { TimeZoneMiddleware } from './assets/middlewares/timeZoneMiddleware';
 
 const confModule = ConfigModule.forRoot({
     envFilePath: '.env',
