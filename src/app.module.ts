@@ -32,6 +32,7 @@ const confModule = ConfigModule.forRoot({
 })
 export class AppModule implements NestModule{
 	configure(consumer: MiddlewareConsumer) {
-		consumer.apply(TimeZoneMiddleware).forRoutes({ path: '*', method: RequestMethod.ALL })
+		consumer.apply(TimeZoneMiddleware).forRoutes({ path: '*', method: RequestMethod.POST })
+		consumer.apply(TimeZoneMiddleware).forRoutes({ path: '*', method: RequestMethod.PUT })
 	}
 }
