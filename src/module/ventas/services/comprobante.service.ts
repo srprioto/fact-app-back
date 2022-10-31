@@ -13,6 +13,7 @@ import { AnularComprobante } from '../dtos/comprobante.dto';
 import { Caja } from 'src/module/locales/entities/caja.entity';
 import { CorrelativoService } from './correlativo.service';
 import { tipoVenta } from '../dtos/ventas.dto';
+import { fechaInicioFinDia } from 'src/assets/functions/fechas';
 
 @Injectable()
 export class ComprobanteService {
@@ -51,12 +52,18 @@ export class ComprobanteService {
     async paginateFilter(
         filtro:string = "_", 
         idLocal:string = "_", 
-        inicio:string, 
-        fin:string, 
+        inicio:string|Date,
+        fin:string|Date,
         options: IPaginationOptions
     ): Promise<Pagination<Comprobante>> {
 
-        const where:any = {};
+        const [ inicioDia, finDia ] = fechaInicioFinDia();
+        inicio = inicio === "_" ? inicioDia : inicio;
+        fin = fin === "_" ? finDia : fin;
+
+        const where:any = {
+            created_at: Between(inicio, fin)
+        };
 
         if (filtro != "_") {
             where.estado_sunat = filtro;
@@ -65,9 +72,9 @@ export class ComprobanteService {
             where.locales = idLocal;
         }
 
-        if (inicio !== "_" || fin !== "_" ) {
-            where.created_at = Between(inicio, fin);
-        }
+        // if (inicio !== "_" || fin !== "_" ) {
+        //     where.created_at = Between(inicio, fin);
+        // }
 
         return paginate<Comprobante>(this.comprobanteRepo, options, {
             relations: ["locales", "ventas", "correlativos"],

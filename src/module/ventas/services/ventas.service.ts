@@ -21,6 +21,7 @@ import { CajaService } from 'src/module/locales/services/caja.service';
 import { VentasProviderService } from './ventas-provider.service';
 // import { CorrelativoService } from './correlativo.service';
 import { CreditoDetallesService } from './credito-detalles.service';
+import { fechaInicioFinDia } from 'src/assets/functions/fechas';
 // import { setTimezone } from 'src/assets/functions/timezone';
 // import { getManager } from "typeorm";
 
@@ -62,13 +63,19 @@ export class VentasService {
     async paginateFilter(
         filtro:string = "_", 
         idLocal:string = "_", 
-        inicio:string, 
-        fin:string, 
+        inicio:string|Date, 
+        fin:string|Date, 
         options: IPaginationOptions
     ): Promise<Pagination<Ventas>> {
 
+        // fechas
+        const [ inicioDia, finDia ] = fechaInicioFinDia();
+        inicio = inicio === "_" ? inicioDia : inicio;
+        fin = fin === "_" ? finDia : fin;
+
         const where:any = {
-            estado_venta: Not("cotizacion")
+            estado_venta: Not("cotizacion"),
+            created_at: Between(inicio, fin)
         };
 
         if (filtro !== "_") {
@@ -77,9 +84,9 @@ export class VentasService {
         if (idLocal !== "_") {
             where.locales = idLocal;
         }
-        if (inicio !== "_" || fin !== "_" ) {
-            where.created_at = Between(inicio, fin);
-        }
+        // if (inicio !== "_" || fin !== "_" ) {
+        //     where.created_at = Between(inicio, fin);
+        // }
         if (filtro === tipoVenta.credito) {
             where.estado_venta = "listo";
             where.tipo_venta = filtro;
@@ -228,10 +235,7 @@ export class VentasService {
     }
 
 
-    // gestion de productos
     async crearVenta(payload:any){ // crear una venta
-
-        // setTimezone() // automatizar
 
         // buscar caja
         const caja:any = await this.cajaRepo.findOne({
