@@ -86,9 +86,9 @@ export class VentasService {
         // fechas
         if (Number(tiendas) === 1) {
             // const [ inicioDia, finDia ] = fechaInicioFinDia();
-            const [ apertura, actual ] = await this.cajaService.fechasFiltroAperturaCaja(idLocal);
-            inicio = inicio === "_" ? apertura : inicio;
-            fin = fin === "_" ? actual : fin;
+            const [ inicioDia, finDia ] = fechaInicioFinDia();
+            inicio = inicio === "_" ? inicioDia : inicio;
+            fin = fin === "_" ? finDia : fin;
             where.created_at = Between(inicio, fin);
         } else {
             if (inicio !== "_" || fin !== "_" ) {
