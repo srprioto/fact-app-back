@@ -59,23 +59,17 @@ export class VentasService {
     //     });
     // }
 
-
     async paginateFilter(
-        filtro:string = "_", 
-        idLocal:string = "_", 
-        inicio:string|Date, 
-        fin:string|Date, 
+        filtro:string = "_",
+        idLocal:string = "_",
+        inicio:string|Date,
+        fin:string|Date,
+        tiendas:number,
         options: IPaginationOptions
     ): Promise<Pagination<Ventas>> {
 
-        // fechas
-        const [ inicioDia, finDia ] = fechaInicioFinDia();
-        inicio = inicio === "_" ? inicioDia : inicio;
-        fin = fin === "_" ? finDia : fin;
-
         const where:any = {
             estado_venta: Not("cotizacion"),
-            created_at: Between(inicio, fin)
         };
 
         if (filtro !== "_") {
@@ -83,13 +77,23 @@ export class VentasService {
         }
         if (idLocal !== "_") {
             where.locales = idLocal;
-        }
-        // if (inicio !== "_" || fin !== "_" ) {
-        //     where.created_at = Between(inicio, fin);
-        // }
+        }        
         if (filtro === tipoVenta.credito) {
             where.estado_venta = "listo";
             where.tipo_venta = filtro;
+        }
+
+        // fechas
+        if (Number(tiendas) === 1) {
+            // const [ inicioDia, finDia ] = fechaInicioFinDia();
+            const [ apertura, actual ] = await this.cajaService.fechasFiltroAperturaCaja(idLocal);
+            inicio = inicio === "_" ? apertura : inicio;
+            fin = fin === "_" ? actual : fin;
+            where.created_at = Between(inicio, fin);
+        } else {
+            if (inicio !== "_" || fin !== "_" ) {
+                where.created_at = Between(inicio, fin);
+            }            
         }
 
         const ventas:any = await paginate<Ventas>(this.ventasRepo, options, {

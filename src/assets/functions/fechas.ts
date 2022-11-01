@@ -9,3 +9,4 @@ export const fechaInicioFinDia = () => {
         new Date(finDia.toString())
     ];
 }
+

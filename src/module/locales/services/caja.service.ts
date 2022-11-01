@@ -8,6 +8,7 @@ import { Locales } from '../entities/locales.entity';
 import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { tipoVenta } from 'src/module/ventas/dtos/ventas.dto';
 import { sumaArrayObj } from 'src/assets/functions/sumaArrayObj';
+import * as moment from 'moment'; moment.locale('es');
 
 @Injectable()
 export class CajaService {
@@ -39,7 +40,7 @@ export class CajaService {
 
         return paginate<Caja>(this.cajaRepo, options, {
             relations: ["cajaDetalles"],
-            order: { updated_at: "DESC" },
+            order: { created_at: "DESC" },
             where
         });
 
@@ -260,6 +261,31 @@ export class CajaService {
 
         await this.cajaRepo.save(caja);
     }
+
+
+    async fechasFiltroAperturaCaja(idLocal:string){
+
+        const cajaAbierta:any = await this.cajaRepo.find({
+            where: { 
+                locales: {
+                    id: idLocal,
+                    tipo_local: "tienda"
+                }, 
+                estado_caja: true
+            }
+        });
+
+        const fechaApertura = cajaAbierta.length > 0 ? cajaAbierta[0].created_at : "";
+        // const inidioDia = moment(fechaActual, "DDMMYYYY");
+        // const finDia = inidioDia.clone().add(1, "day").subtract(1, 'second'); // fin del dia
+
+        return [
+            new Date(fechaApertura.toString()),
+            new Date()
+        ];
+    }
+
+
 }
 
 // async getAll(){

@@ -14,6 +14,7 @@ import { Caja } from 'src/module/locales/entities/caja.entity';
 import { CorrelativoService } from './correlativo.service';
 import { tipoVenta } from '../dtos/ventas.dto';
 import { fechaInicioFinDia } from 'src/assets/functions/fechas';
+import { CajaService } from 'src/module/locales/services/caja.service';
 
 @Injectable()
 export class ComprobanteService {
@@ -44,8 +45,9 @@ export class ComprobanteService {
         @InjectRepository(Caja) private cajaRepo:Repository<Caja>,
         // @InjectRepository(Ventas) private ventasRepo:Repository<Ventas>,
         private comprobanteDetallesService:ComprobanteDetallesService,
-        private ventasProviderService:VentasProviderService,
+        // private ventasProviderService:VentasProviderService,
         private correlativoService:CorrelativoService,
+        private cajaService:CajaService,
     ){ }
 
 
@@ -54,16 +56,11 @@ export class ComprobanteService {
         idLocal:string = "_", 
         inicio:string|Date,
         fin:string|Date,
+        tiendas:number,
         options: IPaginationOptions
     ): Promise<Pagination<Comprobante>> {
 
-        const [ inicioDia, finDia ] = fechaInicioFinDia();
-        inicio = inicio === "_" ? inicioDia : inicio;
-        fin = fin === "_" ? finDia : fin;
-
-        const where:any = {
-            created_at: Between(inicio, fin)
-        };
+        const where:any = {};
 
         if (filtro != "_") {
             where.estado_sunat = filtro;
@@ -72,9 +69,17 @@ export class ComprobanteService {
             where.locales = idLocal;
         }
 
-        // if (inicio !== "_" || fin !== "_" ) {
-        //     where.created_at = Between(inicio, fin);
-        // }
+        // fechas
+        if (Number(tiendas) === 1) {
+            const [ apertura, actual ] = await this.cajaService.fechasFiltroAperturaCaja(idLocal);
+            inicio = inicio === "_" ? apertura : inicio;
+            fin = fin === "_" ? actual : fin;
+            where.created_at = Between(inicio, fin);
+        } else {
+            if (inicio !== "_" || fin !== "_" ) {
+                where.created_at = Between(inicio, fin);
+            }            
+        }
 
         return paginate<Comprobante>(this.comprobanteRepo, options, {
             relations: ["locales", "ventas", "correlativos"],
