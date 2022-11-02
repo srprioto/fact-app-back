@@ -1,11 +1,8 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, Between, Not } from 'typeorm';
 import * as moment from 'moment'; moment.locale('es');
-// import moment from 'moment';
-
 import { Ventas } from '../entities/ventas.entity';
-// import { Usuarios } from 'src/module/usuarios/entities/usuarios.entity';
 import { Clientes } from '../entities/clientes.entity';
 import { tipoVenta, UpdateVentasDto } from '../dtos/ventas.dto';
 import { VentaDetallesService } from './venta-detalles.service';
@@ -19,11 +16,7 @@ import { FormasPagoService } from './formas-pago.service';
 import { ComprobanteService } from './comprobante.service';
 import { CajaService } from 'src/module/locales/services/caja.service';
 import { VentasProviderService } from './ventas-provider.service';
-// import { CorrelativoService } from './correlativo.service';
 import { CreditoDetallesService } from './credito-detalles.service';
-import { fechaInicioFinDia } from 'src/assets/functions/fechas';
-// import { setTimezone } from 'src/assets/functions/timezone';
-// import { getManager } from "typeorm";
 
 var xl = require('excel4node');
 
@@ -64,7 +57,6 @@ export class VentasService {
         idLocal:string = "_",
         inicio:string|Date,
         fin:string|Date,
-        tiendas:number,
         options: IPaginationOptions
     ): Promise<Pagination<Ventas>> {
 
@@ -83,17 +75,8 @@ export class VentasService {
             where.tipo_venta = filtro;
         }
 
-        // fechas
-        if (Number(tiendas) === 1) {
-            // const [ inicioDia, finDia ] = fechaInicioFinDia();
-            const [ inicioDia, finDia ] = fechaInicioFinDia();
-            inicio = inicio === "_" ? inicioDia : inicio;
-            fin = fin === "_" ? finDia : fin;
-            where.created_at = Between(inicio, fin);
-        } else {
-            if (inicio !== "_" || fin !== "_" ) {
-                where.created_at = Between(inicio, fin);
-            }            
+        if (inicio !== "_" || fin !== "_" ) {
+            where.updated_at = Between(inicio, fin);
         }
 
         const ventas:any = await paginate<Ventas>(this.ventasRepo, options, {

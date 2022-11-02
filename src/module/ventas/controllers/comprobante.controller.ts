@@ -11,7 +11,7 @@ export class ComprobanteController {
         private comprobanteService:ComprobanteService
     ){}
 
-    @Get("paginate/:value/:idLocal/:inicio/:fin/:tiendas")
+    @Get("paginate/:value/:idLocal/:inicio/:fin")
     async index(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
         @Query('limit', new DefaultValuePipe(12), ParseIntPipe) limit: number = 12,
@@ -19,13 +19,13 @@ export class ComprobanteController {
         @Param('idLocal') idLocal:string,
         @Param('inicio') inicio:string,
         @Param('fin') fin:string,
-        @Param('tiendas') tiendas:number,
+        // @Param('tiendas') tiendas:number,
     ): Promise<Pagination<Comprobante>> {
         limit = limit > 100 ? 100 : limit;
-        return this.comprobanteService.paginateFilter(value, idLocal, inicio, fin, tiendas, { // ACTUALIZAR DATOS A COMPROBNATE
+        return this.comprobanteService.paginateFilter(value, idLocal, inicio, fin, { // ACTUALIZAR DATOS A COMPROBNATE
             page,
             limit,
-            route: `/comprobante/paginate/${value}/${idLocal}/${inicio}/${fin}/${tiendas}`
+            route: `/comprobante/paginate/${value}/${idLocal}/${inicio}/${fin}`
         });
     }
 

@@ -27,7 +27,7 @@ export class VentasController {
         private ventasService:VentasService
     ){}
 
-    @Get("paginate/:value/:idLocal/:inicio/:fin/:tiendas")
+    @Get("paginate/:value/:idLocal/:inicio/:fin")
     async index(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
         @Query('limit', new DefaultValuePipe(15), ParseIntPipe) limit: number = 15,
@@ -35,13 +35,13 @@ export class VentasController {
         @Param('idLocal') idLocal:string,
         @Param('inicio') inicio:string,
         @Param('fin') fin:string,
-        @Param('tiendas') tiendas:number,
+        // @Param('tiendas') tiendas:number,
     ): Promise<Pagination<Ventas>> {
         limit = limit > 100 ? 100 : limit;
-        return this.ventasService.paginateFilter(value, idLocal, inicio, fin, tiendas, {
+        return this.ventasService.paginateFilter(value, idLocal, inicio, fin, {
             page,
             limit,
-            route: `/ventas/paginate/${value}/${idLocal}/${inicio}/${fin}/${tiendas}`
+            route: `/ventas/paginate/${value}/${idLocal}/${inicio}/${fin}`
         });
     }
 

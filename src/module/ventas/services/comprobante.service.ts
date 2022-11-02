@@ -7,13 +7,9 @@ import { enviarCorreo } from 'src/assets/functions/enviarCorreo';
 import { Comprobante } from '../entities/comprobante.entity';
 import { ComprobanteDetallesService } from './comprobante-detalles.service';
 import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
-// import { VentasService } from './ventas.service';
-import { VentasProviderService } from './ventas-provider.service';
-import { AnularComprobante } from '../dtos/comprobante.dto';
 import { Caja } from 'src/module/locales/entities/caja.entity';
 import { CorrelativoService } from './correlativo.service';
 import { tipoVenta } from '../dtos/ventas.dto';
-import { fechaInicioFinDia } from 'src/assets/functions/fechas';
 import { CajaService } from 'src/module/locales/services/caja.service';
 
 @Injectable()
@@ -42,12 +38,12 @@ export class ComprobanteService {
 
     constructor(
         @InjectRepository(Comprobante) private comprobanteRepo:Repository<Comprobante>,
-        @InjectRepository(Caja) private cajaRepo:Repository<Caja>,
+        // @InjectRepository(Caja) private cajaRepo:Repository<Caja>,
         // @InjectRepository(Ventas) private ventasRepo:Repository<Ventas>,
         private comprobanteDetallesService:ComprobanteDetallesService,
         // private ventasProviderService:VentasProviderService,
         private correlativoService:CorrelativoService,
-        private cajaService:CajaService,
+        // private cajaService:CajaService,
     ){ }
 
 
@@ -56,7 +52,7 @@ export class ComprobanteService {
         idLocal:string = "_", 
         inicio:string|Date,
         fin:string|Date,
-        tiendas:number,
+        // tiendas:number,
         options: IPaginationOptions
     ): Promise<Pagination<Comprobante>> {
 
@@ -69,16 +65,8 @@ export class ComprobanteService {
             where.locales = idLocal;
         }
 
-        // fechas
-        if (Number(tiendas) === 1) {
-            const [ inicioDia, finDia ] = fechaInicioFinDia();
-            inicio = inicio === "_" ? inicioDia : inicio;
-            fin = fin === "_" ? finDia : fin;
-            where.created_at = Between(inicio, fin);
-        } else {
-            if (inicio !== "_" || fin !== "_" ) {
-                where.created_at = Between(inicio, fin);
-            }            
+        if (inicio !== "_" || fin !== "_" ) {
+            where.updated_at = Between(inicio, fin);
         }
 
         return paginate<Comprobante>(this.comprobanteRepo, options, {
