@@ -10,11 +10,14 @@ export class CajaDetallesController {
         private cajaDetallesService:CajaDetallesService
     ){}
 
-
     @Post()
     post(@Body() payload:CreateCajaDetalesDto){
         return this.cajaDetallesService.post(payload);
     }
     
+    @Put(':id')
+    put(@Param('id', ParseIntPipe) id:number, @Body() payload:any){
+        return this.cajaDetallesService.eliminarCajaDetalles(id, payload);
+    }
 
 }
