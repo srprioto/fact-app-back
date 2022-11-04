@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { sumaArrayObj } from 'src/assets/functions/sumaArrayObj';
+// import { sumaArrayObj } from 'src/assets/functions/sumaArrayObj';
 import { Repository } from 'typeorm'
 import { CreateCajaDetalesDto } from '../dtos/caja-detalles.dto';
 import { CajaDetalles } from '../entities/caja-detalles.entity';
