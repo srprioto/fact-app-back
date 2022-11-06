@@ -15,6 +15,7 @@ import { Locales } from "src/module/locales/entities/locales.entity";
 import { FormasPago } from "./formas_pago.entity";
 import { Comprobante } from "./comprobante.entity";
 import { CreditoDetalles } from "./credito_detalles.entity";
+import { Caja } from "src/module/locales/entities/caja.entity";
 
 enum EstadoVenta {
     cotizacion = "cotizacion",
@@ -71,9 +72,6 @@ export class Ventas {
     @Column({type: "boolean", default: true})
     estado_producto:boolean;
 
-    // @Column({type: "decimal", precision: 10, scale: 2, default: 0})
-    // totalPagado:number;
-
 
     @CreateDateColumn()
     created_at: Date;
@@ -91,7 +89,9 @@ export class Ventas {
 
     @ManyToOne(() => Locales, (locales) => locales.ventas)
     locales:number;
-    
+
+    @ManyToOne(() => Caja, (caja) => caja.ventas)
+    caja:number;
     
     
     // bidireccional
@@ -107,7 +107,4 @@ export class Ventas {
     @OneToMany(() => CreditoDetalles, creditoDetalles => creditoDetalles.ventas)
     creditoDetalles:CreditoDetalles[];
 
-
-
-        
 }

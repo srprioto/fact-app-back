@@ -97,9 +97,9 @@ export class AnularVentaDto {
     @IsNotEmpty()  
     usuarioId:number;
 
-    @IsBoolean()
-    @IsNotEmpty()
-    afectarCaja:boolean;
+    // @IsBoolean()
+    // @IsNotEmpty()
+    // afectarCaja:boolean;
 }
 
 export const tipoVenta = {

@@ -16,32 +16,25 @@ export class CajaDetallesService {
 
     async post(payload:CreateCajaDetalesDto) {
 
+        // aqui vamos a añadir a otros montos solo lo que venga en efectivo
+        // verificamos que lo que venga en otras monedas no se añada
+
         // creacion caja detalles
         const elemento = this.cajaDetallesRepo.create(payload);
         elemento.caja = payload.cajaId
         elemento.usuario = payload.usuarioId
         const data:any = await this.cajaDetallesRepo.save(elemento);
 
-        // actualizacion en caja
-        const caja:any = await this.cajaRepo.findOne(payload.cajaId);
-        caja.otros_montos = Number(caja.otros_montos) + Number(payload.monto_movimiento);
-        const cajaUpdate:any = this.cajaRepo.create(caja);
-        await this.cajaRepo.save(cajaUpdate);
+        // // habilitar en caso de que se requiera
+        // // añade actualizacion a caja, solo efectivo
+        // if (payload.forma_pago === "efectivo") { 
+        //     // actualizacion en caja
+        //     const caja:any = await this.cajaRepo.findOne(payload.cajaId);
+        //     caja.otros_montos = Number(caja.otros_montos) + Number(payload.monto_movimiento);
+        //     const cajaUpdate:any = this.cajaRepo.create(caja);
+        //     await this.cajaRepo.save(cajaUpdate);    
+        // }
 
-        return {
-            success: "creado correctamente",
-            data: data
-        }
-
-    }
-
-
-    async registrarAnulacionCajaDet(payload:CreateCajaDetalesDto){
-        const elemento = await this.cajaDetallesRepo.create(payload);
-        elemento.caja = payload.cajaId
-        elemento.usuario = payload.usuarioId
-        const data:any = await this.cajaDetallesRepo.save(elemento);
-        
         return {
             success: "creado correctamente",
             data: data
@@ -54,7 +47,7 @@ export class CajaDetallesService {
         const cajaDetalle = await this.cajaDetallesRepo.findOne(id)
         const descripcion:any = cajaDetalle.descripcion.split('@');
 
-        if (!(descripcion.length > 1)) {
+        if (!(descripcion.length > 1)) { // eliminar esta condicion, o reemplazarla
 
             const caja:any = await this.cajaRepo.findOne(payload.idCaja);
             const monto_mov_sinsigno:number = Math.abs(Number(cajaDetalle.monto_movimiento))
@@ -78,11 +71,20 @@ export class CajaDetallesService {
         } else {
             return { fail: "No se pueden eliminar anulaciones" }    
         }
-
-
-
-
     }
+
+    
+    // async registrarAnulacionCajaDet(payload:CreateCajaDetalesDto){ // deprecate
+    //     const elemento = await this.cajaDetallesRepo.create(payload);
+    //     elemento.caja = payload.cajaId
+    //     elemento.usuario = payload.usuarioId
+    //     const data:any = await this.cajaDetallesRepo.save(elemento);
+        
+    //     return {
+    //         success: "creado correctamente",
+    //         data: data
+    //     }
+    // }
 
 
 }

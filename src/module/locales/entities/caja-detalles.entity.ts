@@ -24,16 +24,14 @@ export class CajaDetalles {
     @Column({type: "decimal", precision: 10, scale: 2, default: 0})
     monto_movimiento:number;
 
-    // @Column({
-    //     type: "enum",
-    //     enum: tipoMovimiento,
-    //     default: tipoMovimiento.ingreso
-    // })
-    // tipo_movimiento:tipoMovimiento
+    @Column({type: "varchar", length: 30})
+    tipo_movimiento:string;
 
     @Column({type: "varchar", length: 150})
     descripcion:string;
 
+    @Column({type: "varchar", length: 25, default: "efectivo"})
+    forma_pago:string;
 
     @CreateDateColumn() /* {type: 'timestamp'} */
     created_at: Date;

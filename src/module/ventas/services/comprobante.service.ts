@@ -90,12 +90,16 @@ export class ComprobanteService {
         // }
     }
 
-
+    
     async searchData(value:string, idLocal:string){
 
         const where:any = [
-            { id: Like(`%${value}%`) },
-            { serie: Like(`%${value}%`) }
+            // { id: Like(`%${value}%`) },
+            { correlativo: Like(`%${value}%`) },
+            { ventas: { id: Like(`%${value}%`) } },
+            { ventas: { codigo_venta: Like(`%${value}%`) } },
+            { clientes: { nombre: Like(`%${value}%`) } },
+            { clientes: { numero_documento: Like(`%${value}%`) } }
         ]
 
         if (idLocal != "_") {
@@ -103,7 +107,7 @@ export class ComprobanteService {
         }
 
         const data = await this.comprobanteRepo.find({
-            relations: ["locales", "ventas", "correlativos"],
+            relations: ["locales", "ventas", "correlativos", "clientes"],
             order: { id: "DESC" },
             where: where
         });

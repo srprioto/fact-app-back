@@ -14,6 +14,7 @@ import { Productos } from "src/module/productos/entities/productos.entity";
 import { Transacciones } from "src/module/locales/entities/transacciones.entity";
 import { Caja } from "src/module/locales/entities/caja.entity";
 import { Locales } from "src/module/locales/entities/locales.entity";
+import { Exclude } from "class-transformer";
 
 @Entity()
 export class Usuarios {
@@ -36,9 +37,11 @@ export class Usuarios {
     @Column({type: "int", nullable: true})
     edad:number;
     
+    @Exclude()
     @Column({type: "varchar", length: 50, unique: true})
     email:string;
 
+    @Exclude()
     @Column({type: "varchar", length: 150})
     password:string;
     

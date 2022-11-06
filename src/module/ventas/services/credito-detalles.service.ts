@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { tipoMovimiento } from 'src/module/locales/dtos/caja-detalles.dto';
+import { CajaDetalles } from 'src/module/locales/entities/caja-detalles.entity';
 import { Caja } from 'src/module/locales/entities/caja.entity';
+import { CajaDetallesService } from 'src/module/locales/services/caja-detalles.service';
 import { CajaService } from 'src/module/locales/services/caja.service';
 import { Repository } from 'typeorm';
 import { tipoVenta } from '../dtos/ventas.dto';
@@ -15,8 +18,10 @@ export class CreditoDetallesService {
         @InjectRepository(CreditoDetalles) private creditoDetallesRepo:Repository<CreditoDetalles>,
         @InjectRepository(Ventas) private ventasRepo:Repository<Ventas>,
         @InjectRepository(Caja) private cajaRepo:Repository<Caja>,
-        private cajaService:CajaService,
+        // @InjectRepository(CajaDetalles) private cajaDetallesService:Repository<CajaDetalles>,
+        // private cajaService:CajaService,
         private formasPagoService:FormasPagoService,
+        private cajaDetallesService:CajaDetallesService,
 
     ){}
 
@@ -36,17 +41,19 @@ export class CreditoDetallesService {
             // añade detalles credito adelanto
             await this.crearCreditoAdelanto(payload);
             
-            // aqui añadimos ingreso a caja - condicionada por forma de pago
-            const venta:any = await this.ventasRepo.findOne(payload.ventas);
-            venta.forma_pago = payload.forma_pago
-            const caja:any = await this.cajaRepo.findOne({
-                where: {
-                    locales: { id: payload.localId, tipo_local: "tienda" },
-                    estado_caja: true
-                }
-            })
-            const creditoDetalles:any = [{ cantidad_pagada: payload.cantidad_pagada }]
-            await this.cajaService.incrementoCaja(caja, [], creditoDetalles, venta);
+            // // aqui añadimos ingreso a caja - condicionada por forma de pago
+            // // anulamos desde aqui
+            // const venta:any = await this.ventasRepo.findOne(payload.ventas);
+            // venta.forma_pago = payload.forma_pago
+            // const caja:any = await this.cajaRepo.findOne({
+            //     where: {
+            //         locales: { id: payload.localId, tipo_local: "tienda" },
+            //         estado_caja: true
+            //     }
+            // })
+            // const creditoDetalles:any = [{ cantidad_pagada: payload.cantidad_pagada }]
+            // await this.cajaService.incrementoCaja(caja, [], creditoDetalles, venta);
+            // // hasta anulamos desde aqui
 
             // añade forma de pago de la venta, no de la caja
             const formasPago:Array<any> = [{
@@ -55,7 +62,7 @@ export class CreditoDetallesService {
             }];
             if (formasPago.length > 0) {
                 formasPago.forEach(async (e:any) => { 
-                    e.venta = venta.id
+                    e.venta = payload.ventas
                     await this.formasPagoService.create(e);
                 })
             }
@@ -66,10 +73,40 @@ export class CreditoDetallesService {
 
 
     async crearCreditoAdelanto(payload:any){
+
+        const cajaActual:any = await this.cajaRepo.findOne({
+            where: {
+                locales: { id: payload.localId, tipo_local: "tienda" },
+                estado_caja: true
+            }
+        })
+
+        const ventaActual:any = await this.ventasRepo.findOne(payload.ventas, {
+            relations: ["caja", "usuarios"]
+        });
+
         payload.fecha_estimada = new Date(payload.fecha_estimada);
         const creditoDetalles:any = this.creditoDetallesRepo.create(payload);
         const resto:any = await this.creditoDetallesRepo.save(creditoDetalles);
+        const notaCredito:string = payload.nota ? payload.nota : "Pago de credito"
+
+
+        const idCajaVenta:number = ventaActual.caja ? ventaActual.caja.id : 0;
+        const idCajaActual:number = cajaActual ? cajaActual.id : 0;
+
+        if (idCajaActual !== idCajaVenta) {            
+            await this.cajaDetallesService.post({
+                monto_movimiento: payload.cantidad_pagada,
+                descripcion: `Cod: ${ventaActual.id} - ${notaCredito}`,
+                tipo_movimiento: tipoMovimiento.credito,
+                forma_pago: payload.forma_pago,
+                cajaId: idCajaActual,
+                usuarioId: ventaActual.usuarios.id // cambiar en caso de que se requiera
+            });
+        }
+
         return resto;
+
     }
     
 }

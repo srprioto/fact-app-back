@@ -8,7 +8,8 @@ import { Locales } from '../entities/locales.entity';
 import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { tipoVenta } from 'src/module/ventas/dtos/ventas.dto';
 import { sumaArrayObj } from 'src/assets/functions/sumaArrayObj';
-import * as moment from 'moment'; moment.locale('es');
+import * as moment from 'moment';import { Ventas } from 'src/module/ventas/entities/ventas.entity';
+ moment.locale('es');
 
 @Injectable()
 export class CajaService {
@@ -117,12 +118,7 @@ export class CajaService {
 
 
     async cerrarCaja(id:number, payload:any){ // id, es el id de la caja que vamos a cerrar
-        
-        const caja:any = await this.cajaRepo.findOne(id, {
-            where: {
-                locales: payload.localId
-            }
-        });
+        const caja:any = await this.cajaIngresos(id);
 
         caja.locales = payload.localId // requiere tambien el id del local
         caja.usuarioCierra = payload.usuarioCierraId
@@ -130,10 +126,10 @@ export class CajaService {
 
         this.cajaRepo.merge(caja, payload);
 
-        const data = await this.cajaRepo.save(caja);
+        await this.cajaRepo.save(caja);
         await this.registrarIdCasaLocal(0, payload.localId);
 
-        // añadir aqui eliminar todos los elementos que rechazados y enviados
+        // elimina todos los elementos rechazados y enviados
         await this.ventasService.eliminarEnviadosRechazados(payload.localId);
 
         return {
@@ -149,36 +145,84 @@ export class CajaService {
     }
 
 
-    async localCajaIngresos(idLocal:number){
+    async localCajaIngresos(idLocal:number){ // *****
         const local:any = await this.localesRepo.findOne(idLocal);
-
-        const caja:any = await this.cajaRepo.findOne(local.caja_actual, {
-            relations: ["cajaDetalles", "cajaDetalles.usuario"]
-        });
-
-        // let ingresosDiarios:any;
-
-        // if (caja) {
-        //     ingresosDiarios = await this.ventasService.ingresosDiariosAperturaCaja(idLocal, caja.created_at);
-        // } else {
-        //     ingresosDiarios = await this.ventasService.ingresosDiariosLocal(idLocal);
-        // }
-
-        // ingresosDiarios = await this.ventasService.ingresosDiariosLocal(idLocal);
-
+        const caja:any = await this.cajaIngresos(local.caja_actual);
+        
         return {
             success: "Ok",
             data: {
                 local, 
-                caja,
-                // totalIngresos: ingresosDiarios.data.totalDineroDia
+                caja
             }
         }
         
     }
 
 
-    async incrementoCaja(caja:any, formasPago:any, creditoDetalles:any, venta:any){ // requiere creditoDetalles
+    async cajaIngresos(caja_actual:number){
+        const caja:any = await this.cajaRepo.findOne(caja_actual, {
+            relations: ["cajaDetalles", "cajaDetalles.usuario"]
+        });
+
+        let montoEfectivo:number = 0;
+        let montoTarjeta:number = 0;
+        let montoPagoElectronico:number = 0;
+        let montoDeposito:number = 0;
+        let otrosMovimientos:number = 0;
+
+        if (caja) {
+            const ventas:any = await this.ventasService.ventasCaja(caja.id);
+            ventas.forEach((e:any) => {
+                if (e.formasPago.length > 0) {
+                    e.formasPago.forEach(async (e:any) => { 
+                        if (e.forma_pago === "efectivo") {
+                            montoEfectivo = Number(montoEfectivo) + Number(e.precio_parcial);
+                        } else if (e.forma_pago === "tarjeta") {
+                            montoTarjeta = Number(montoTarjeta) + Number(e.precio_parcial);
+                        } else if (e.forma_pago === "pago_electronico") {
+                            montoPagoElectronico = Number(montoPagoElectronico) + Number(e.precio_parcial);
+                        } else if (e.forma_pago === "deposito") {
+                            montoDeposito = Number(montoDeposito) + Number(e.precio_parcial);
+                        }
+                    })
+                } else {
+                    if (e.forma_pago === "efectivo") {
+                        montoEfectivo = Number(montoEfectivo) + Number(e.total);
+                    } else if (e.forma_pago === "tarjeta") {
+                        montoTarjeta = Number(montoTarjeta) + Number(e.total);
+                    } else if (e.forma_pago === "pago_electronico") {
+                        montoPagoElectronico = Number(montoPagoElectronico) + Number(e.total);
+                    } else if (e.forma_pago === "deposito") {
+                        montoDeposito = Number(montoDeposito) + Number(e.total);
+                    }
+                }
+            });
+            caja.cajaDetalles.forEach((e:any) => { 
+                if (e.forma_pago === "efectivo") {
+                    otrosMovimientos = Number(otrosMovimientos) + Number(e.monto_movimiento)
+                } else if (e.forma_pago === "tarjeta") {
+                    montoTarjeta = Number(montoTarjeta) + Number(e.monto_movimiento)
+                } else if (e.forma_pago === "pago_electronico") {
+                    montoPagoElectronico = Number(montoPagoElectronico) + Number(e.monto_movimiento)
+                } else if (e.forma_pago === "deposito") {
+                    montoDeposito = Number(montoDeposito) + Number(e.monto_movimiento)
+                }
+            })
+        }
+
+        caja.monto_efectivo = montoEfectivo;
+        caja.monto_tarjeta = montoTarjeta;
+        caja.monto_pago_electronico = montoPagoElectronico;
+        caja.monto_deposito = montoDeposito;
+        caja.otros_montos = otrosMovimientos;
+
+        return caja;
+    }
+
+
+    // ** obliterado **
+    async incrementoCajaNo(caja:any, formasPago:any, creditoDetalles:any, venta:any){ // requiere creditoDetalles
 
         let anadirCajaTotal:number = 0;
         const esCredito:boolean = (
@@ -190,7 +234,7 @@ export class CajaService {
             anadirCajaTotal = sumaArrayObj(creditoDetalles, "cantidad_pagada");
         } else {
             anadirCajaTotal = venta.total;
-        }   
+        }
 
         if (formasPago.length > 0) {
             formasPago.forEach(async (e:any) => { 
@@ -221,7 +265,8 @@ export class CajaService {
     }
     
     
-    async descuentoCaja(caja:any, formasPago:any, creditoDetalles:any, venta:any){ // requiere creditoDetalles
+    // ** obliterado **
+    async descuentoCajaNo(caja:any, formasPago:any, creditoDetalles:any, venta:any){ // requiere creditoDetalles
 
         let anadirCajaTotal:number = 0;
         const esCredito:boolean = (
@@ -262,7 +307,7 @@ export class CajaService {
         await this.cajaRepo.save(caja);
     }
 
-
+    // ** obliterado **
     async fechasFiltroAperturaCaja(idLocal:string){
 
         const cajaAbierta:any = await this.cajaRepo.find({

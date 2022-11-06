@@ -4,7 +4,7 @@ import { Repository, Like, Between, Not } from 'typeorm';
 import * as moment from 'moment'; moment.locale('es');
 import { Ventas } from '../entities/ventas.entity';
 import { Clientes } from '../entities/clientes.entity';
-import { tipoVenta, UpdateVentasDto } from '../dtos/ventas.dto';
+import { AnularVentaDto, tipoVenta, UpdateVentasDto } from '../dtos/ventas.dto';
 import { VentaDetallesService } from './venta-detalles.service';
 import { ClientesService } from './clientes.service';
 
@@ -237,14 +237,7 @@ export class VentasService {
         })
 
         if (caja) {
-
             // crear cliente
-            // let newCliente:any;
-            // if (payload.cliente.numero_documento) {
-            //     const cliente:any = this.clientesRepo.create(payload.cliente);
-            //     newCliente = await this.clientesRepo.save(cliente);
-            // }
-
             let newCliente:any;
             if (payload.cliente.numero_documento) {
                 const searchCliente = await this.clientesRepo.findOne({
@@ -274,7 +267,8 @@ export class VentasService {
             venta.usuarios = payload.usuarioId;
             venta.locales = payload.localId;
             venta.codigo_venta = codigoVenta;
-            
+            venta.caja = caja.id;
+
             const data:any = await this.ventasRepo.save(venta);
 
             // guardar detalles de venta
@@ -336,12 +330,6 @@ export class VentasService {
         let idCliente:number = 0;
         let newCreditoDetalles:Array<any> = [];
 
-        // 
-        // if (!!cliente.id) { // el cliente existe
-        //     idCliente = cliente.id;
-        // //  && cliente.serie_documento
-        // } else 
-
         // gestion cliente
         if (cliente.numero_documento){
             const searchCliente = await this.clientesRepo.findOne({
@@ -389,22 +377,25 @@ export class VentasService {
         // credito o adelanto
         if (esCredito) {
             await Promise.all(payload.creditoDetalles.map(async (e:any) => {
-                e.ventas = venta.id
+                e.ventas = venta.id;
+                e.localId = payload.localId;
                 const creditoDetall:any = await this.creditoDetallesService.crearCreditoAdelanto(e);
                 newCreditoDetalles.push(creditoDetall);
             }));
         }
 
-        // caja
-        const caja:any = await this.cajaRepo.findOne({
-            where: {
-                locales: { id: payload.localId, tipo_local: "tienda" },
-                estado_caja: true
-            }
-        })
-
-        // añadir dinero a caja
-        await this.cajaService.incrementoCaja(caja, formasPago, newCreditoDetalles, venta);
+        // // caja
+        // // anulamos desde aqui
+        // const caja:any = await this.cajaRepo.findOne({
+        //     where: {
+        //         locales: { id: payload.localId, tipo_local: "tienda" },
+        //         estado_caja: true
+        //     }
+        // })
+        // // añadir dinero a caja
+        // await this.cajaService.incrementoCaja(caja, formasPago, newCreditoDetalles, venta);
+        // // hasta aqui
+        
 
         // envio por correo electronico
         if (!!payload.envioComprobante) { 
@@ -439,16 +430,19 @@ export class VentasService {
     }
 
 
-    async anularVenta(idVenta:number, payload:any){
+    async anularVenta(idVenta:number, payload:AnularVentaDto){
 
         const venta:any = await this.ventasRepo.findOne(idVenta, { relations: ["comprobante", "locales"] });
         const comprobante:any = venta.comprobante.length > 0 ? venta.comprobante[0] : {}
         const locales:any = venta.locales ? venta.locales : {};
-        const caja:any = await this.cajaRepo.findOne({
-            relations: ["locales"],
-            where: { locales: { id: locales.id, tipo_local: "tienda" }, estado_caja: true }
-        });
         const esCredito:boolean = (venta.tipo_venta === tipoVenta.credito || venta.tipo_venta === tipoVenta.adelanto);
+
+        // const caja2:any = await this.cajaRepo.findOne({
+        //     relations: ["locales"],
+        //     where: { locales: { id: locales.id, tipo_local: "tienda" }, estado_caja: true }
+        // });
+
+        const caja:any = await this.cajaService.cajaIngresos(locales.caja_actual);
         const montoCaja:number = Number(caja.monto_apertura) + Number(caja.monto_efectivo) + Number(caja.otros_montos);
 
         if (montoCaja < Number(venta.total)) {
@@ -457,8 +451,8 @@ export class VentasService {
         } else {
             // aqui añadimos la anulacion de venta
             if (venta.tipo_venta === tipoVenta.venta_rapida || esCredito) {
-                // anulacion de venta normal
-                await this.ventasProviderService.anulacionVenta(idVenta, payload.notaBaja, payload.usuarioId, payload.afectarCaja);
+                // anulacion de venta normal                
+                await this.ventasProviderService.anulacionVenta(idVenta, payload.notaBaja, payload.usuarioId, caja.id);
             } else {
                 // anulacion de comprobante
                 if (venta.tipo_venta === tipoVenta.factura) {
@@ -466,19 +460,20 @@ export class VentasService {
                     const response:any = await this.comprobanteService.anularFactura(comprobante, payload);
                     if (response.estado === "Anulado" || response.estado === "Anulacion procesada"){
                         // anular venta
-                        await this.ventasProviderService.anulacionVenta(idVenta, payload.notaBaja, payload.usuarioId, payload.afectarCaja);
+                        await this.ventasProviderService.anulacionVenta(idVenta, payload.notaBaja, payload.usuarioId, caja.id);
                     }
                 } else if (venta.tipo_venta === tipoVenta.boleta) {
                     // // anular boleta
                     const response:any = await this.comprobanteService.anularBoleta(comprobante.id, payload);
                     if (response.estado === "Anulado" || response.estado === "Anulacion procesada") {
                         // anular venta
-                        await this.ventasProviderService.anulacionVenta(idVenta, payload.notaBaja, payload.usuarioId, payload.afectarCaja);    
+                        await this.ventasProviderService.anulacionVenta(idVenta, payload.notaBaja, payload.usuarioId, caja.id);    
                     }
                 }               
             }
             return false;
         }
+
     }
 
     
@@ -488,9 +483,7 @@ export class VentasService {
         const elemento = await this.ventasRepo.findOne(id);
         this.ventasRepo.merge(elemento, updatePayload);
         const update = await this.ventasRepo.save(elemento);
-
         return update;
-
     }
 
 
@@ -792,6 +785,20 @@ export class VentasService {
                 totalVentasSemana
             }
         }
+    }
+
+
+    async ventasCaja(idCaja:number){
+        const ventas:any = await this.ventasRepo.find({
+            relations: ["ventaDetalles", "formasPago", "creditoDetalles"],
+            where: {
+                estado_venta: "listo",
+                caja: idCaja
+            },
+            order: { id: "DESC" }
+        });
+        return ventas;
+
     }
 
 

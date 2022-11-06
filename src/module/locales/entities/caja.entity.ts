@@ -11,6 +11,7 @@ import {
 import { Locales } from "./locales.entity";
 import { Usuarios } from "src/module/usuarios/entities/usuarios.entity";
 import { CajaDetalles } from "./caja-detalles.entity";
+import { Ventas } from "src/module/ventas/entities/ventas.entity";
 
 // enum estado {
 //     abierto = "abierto",
@@ -78,10 +79,11 @@ export class Caja {
 
 
     // bidireccional
-
     @OneToMany(() => CajaDetalles, (cajaDetalles) => cajaDetalles.caja)
     cajaDetalles:CajaDetalles[];
 
+    @OneToMany(() => Ventas, (ventas) => ventas.caja)
+    ventas:Ventas[];
 
 }
 
