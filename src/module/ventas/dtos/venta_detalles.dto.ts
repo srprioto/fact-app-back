@@ -16,7 +16,7 @@ export interface CreateVentaDetalles {
     precio_venta:number;
     precio_parcial:number;
     venta_negativa:number;
-    estado_venta_detalle:any;
+    // estado_venta_detalle:any;
     productosId:number;
 }
 
@@ -46,11 +46,9 @@ export class CreateVentaDetallesDto{
     venta_negativa:number;
 
 
-    @IsNotEmpty()
-    @IsString()
-    estado_venta_detalle:string;
-    // codigo_producto: "00nuevv"
-    // nombre_producto: "00nuevv prodd"
+    // @IsNotEmpty()
+    // @IsString()
+    // estado_venta_detalle:string;
 
     
     @IsNumber()

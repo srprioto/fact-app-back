@@ -40,13 +40,13 @@ export class VentaDetalles {
     @Column({type: "int"})
     venta_negativa:number;
 
-    @Column({
-        type: "enum",
-        enum: EstadoVentaDetalle,
-        default: EstadoVentaDetalle.enviado
-    })
-    // @Column({type: "varchar", length: 10})
-    estado_venta_detalle:EstadoVentaDetalle;
+    // @Column({
+    //     type: "enum",
+    //     enum: EstadoVentaDetalle,
+    //     default: EstadoVentaDetalle.enviado
+    // })
+    // // @Column({type: "varchar", length: 10})
+    // estado_venta_detalle:EstadoVentaDetalle;
 
     
     @CreateDateColumn()

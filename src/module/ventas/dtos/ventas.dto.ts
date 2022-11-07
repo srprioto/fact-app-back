@@ -32,7 +32,6 @@ export class CreateVentasDto{
     observaciones:string;
 
     @IsNumber()
-    @IsNumber()
     descuento_total:number;
 
     @IsNotEmpty()

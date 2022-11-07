@@ -303,7 +303,7 @@ export class VentasService {
                 data: await this.editarConfirmarVenta(id, payload)
             }
         } else { // crear y confirmar venta aqui, desde la creacion de pedido
-            // IMPORTANTE: el id debe tener como 0 por defecto desde el frontend
+            // IMPORTANTE: el id debe tener 0 como valor por defecto desde el frontend
             // this.crearVenta(payload);
         }
 
@@ -344,27 +344,24 @@ export class VentasService {
                 const newCliente:any = await this.clientesService.post(cliente);
                 idCliente = newCliente.data.id;
             }   
+        } else {
+            idCliente = null;
         }
 
         // estado_venta y cliente
-        const venta = await this.ventasRepo.findOne(id);
+        const venta = await this.ventasRepo.findOne(id, { relations: ["ventaDetalles"] });
         if (idCliente !== 0) { // recupera id del cliente, en caso de que exista y cambie
             venta.clientes = idCliente;
-        }
-
-        // *** envio de comprobante sunat ***
-        if (esComprobante && !esCredito) {
-            payload.comprobante.clientes.id = idCliente;
-            await this.comprobanteService.enviarComprobanteSunat(payload.comprobante, payload.localId);
         }
 
         // estado venta
         this.ventasRepo.merge(venta, payload);
         await this.ventasRepo.save(venta);
-        
-        payload.ventaDetalles.forEach(async (detalle:any) => {            
-            await this.ventaDetallesService.editarDetalleVentas(detalle.id, payload.localId, detalle);
-        });
+
+        // // ventasDetalles
+        // payload.ventaDetalles.forEach(async (detalle:any) => { 
+        //     await this.ventaDetallesService.editarDetalleVentas(detalle.id, payload.localId, detalle);
+        // });
 
         // formas de pagos
         if (formasPago.length > 0) {
@@ -384,22 +381,15 @@ export class VentasService {
             }));
         }
 
-        // // caja
-        // // anulamos desde aqui
-        // const caja:any = await this.cajaRepo.findOne({
-        //     where: {
-        //         locales: { id: payload.localId, tipo_local: "tienda" },
-        //         estado_caja: true
-        //     }
-        // })
-        // // añadir dinero a caja
-        // await this.cajaService.incrementoCaja(caja, formasPago, newCreditoDetalles, venta);
-        // // hasta aqui
-        
-
         // envio por correo electronico
         if (!!payload.envioComprobante) { 
             await this.comprobanteService.comprobanteEnviarCorreo(payload.comprobante, payload.envioComprobante);
+        }
+
+        // *** envio de comprobante sunat ***
+        if (esComprobante && !esCredito) {
+            payload.comprobante.clientes.id = idCliente;
+            await this.comprobanteService.enviarComprobanteSunat(payload.comprobante, payload.localId);
         }
 
         // // fin caja

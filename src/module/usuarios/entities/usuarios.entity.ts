@@ -37,7 +37,7 @@ export class Usuarios {
     @Column({type: "int", nullable: true})
     edad:number;
     
-    @Exclude()
+    // @Exclude()
     @Column({type: "varchar", length: 50, unique: true})
     email:string;
 
