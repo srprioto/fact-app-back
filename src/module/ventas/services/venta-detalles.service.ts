@@ -82,26 +82,26 @@ export class VentaDetallesService {
     }
 
 
-    async editarDetalleVentas(idVenDetall:number, idLocal:number, payload:any){
+    // async editarDetalleVentas(idVenDetall:number, idLocal:number, payload:any){
 
-        if (payload.estado_venta_detalle === "listo") {
-            // actualizamos aqui
-            const elemento = await this.ventaDetallesRepo.findOne(idVenDetall);
-            this.ventaDetallesRepo.merge(elemento, payload);
-            await this.ventaDetallesRepo.save(elemento);
+    //     if (payload.estado_venta_detalle === "listo") {
+    //         // actualizamos aqui
+    //         const elemento = await this.ventaDetallesRepo.findOne(idVenDetall);
+    //         this.ventaDetallesRepo.merge(elemento, payload);
+    //         await this.ventaDetallesRepo.save(elemento);
 
-            // modificar cantidad
-            await this.localesStockService.quitarCantidadProductos(payload.productos.id, idLocal, payload.cantidad_venta);
+    //         // modificar cantidad
+    //         await this.localesStockService.quitarCantidadProductos(payload.productos.id, idLocal, payload.cantidad_venta);
 
-        } else if (payload.estado_venta_detalle === "rechazado") {
-            const elemento = await this.ventaDetallesRepo.findOne(idVenDetall);
-            this.ventaDetallesRepo.merge(elemento, payload);
-            await this.ventaDetallesRepo.save(elemento);
-        } 
+    //     } else if (payload.estado_venta_detalle === "rechazado") {
+    //         const elemento = await this.ventaDetallesRepo.findOne(idVenDetall);
+    //         this.ventaDetallesRepo.merge(elemento, payload);
+    //         await this.ventaDetallesRepo.save(elemento);
+    //     } 
         
-        // actualizamos estado de venta detalles aqui
+    //     // actualizamos estado de venta detalles aqui
         
-    }
+    // }
 
 
     async put(id:number, payload:any){

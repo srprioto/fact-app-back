@@ -11,6 +11,7 @@ import { CajaDetallesService } from 'src/module/locales/services/caja-detalles.s
 import { tipoMovimiento } from 'src/module/locales/dtos/caja-detalles.dto';
 import { tiposIngresos } from '../dtos/ingresos-ventas.dto';
 import { IngresosVentas } from '../entities/ingresos-ventas.entity';
+import { LocalesStockService } from 'src/module/locales/services/locales-stock.service';
 
 @Injectable()
 export class VentasProviderService {
@@ -19,17 +20,20 @@ export class VentasProviderService {
         @InjectRepository(Ventas) private ventasRepo:Repository<Ventas>,
         @InjectRepository(IngresosVentas) private ingresosVentasRepo:Repository<IngresosVentas>,
         private cajaDetallesService:CajaDetallesService,
+        private localesStockService:LocalesStockService,
         // @InjectRepository(Caja) private cajaRepo:Repository<Caja>,
-        // private cajaService:CajaService,
     ){ }
 
     async anulacionVenta(idVenta:number, notaBaja:string, usuarioId:number, idCajaActual:number){
 
         // actualizar y anular venta
-        const venta:any = await this.ventasRepo.findOne(idVenta, { relations: ["locales", "formasPago", "creditoDetalles", "caja", "ingresosVentas"] });
+        const venta:any = await this.ventasRepo.findOne(idVenta, { 
+            relations: ["ventaDetalles", "ventaDetalles.productos", "locales", "formasPago", "creditoDetalles", "caja", "ingresosVentas"] 
+        });
         const idCajaVenta:number = venta.caja ? venta.caja.id : 0;
 
-        if (idCajaActual !== idCajaVenta) { // verifica que sea una anulacion pasada
+        // verifica que sea una venta que no pertenece a la caja actual
+        if (idCajaActual !== idCajaVenta) { 
 
             let montoMovimiento:number = 0;
             if (venta.tipo_venta === tipoVenta.credito || venta.tipo_venta === tipoVenta.adelanto) {
@@ -48,17 +52,25 @@ export class VentasProviderService {
             });
         } 
 
+        // guardamos cambiamos de anulacion de venta
         venta.estado_venta = "anulado";
         venta.observaciones = notaBaja;
-
         const newVenta:any = this.ventasRepo.create(venta);
+        await this.ventasRepo.save(newVenta);
 
+        // eliminamos ingreso ventas
         if (!!venta.ingresosVentas) {
             await this.ingresosVentasRepo.delete(venta.ingresosVentas.id);
         }
-        await this.ventasRepo.save(newVenta);
 
-        return { // aqui devolvemos true o false, dependiendo de si existe cantidad de dinero necesaria
+        // devolver stock de productos
+        if (venta.ventaDetalles.length > 0) {
+            await Promise.all(venta.ventaDetalles.map(async (e:any) => {
+                await this.localesStockService.anadirCantidadProductos(e.productos.id, venta.locales.id, e.cantidad_venta);
+            }))
+        }
+        
+        return {
             success: "Venta anulada correctamente"
         }
     }

@@ -17,6 +17,7 @@ import { ComprobanteService } from './comprobante.service';
 import { CajaService } from 'src/module/locales/services/caja.service';
 import { VentasProviderService } from './ventas-provider.service';
 import { CreditoDetallesService } from './credito-detalles.service';
+import { LocalesStockService } from 'src/module/locales/services/locales-stock.service';
 
 var xl = require('excel4node');
 
@@ -29,6 +30,7 @@ export class VentasService {
         // @InjectRepository(Usuarios) private usuariosRepo:Repository<Usuarios>,
         @InjectRepository(Clientes) private clientesRepo:Repository<Clientes>,
         // @Inject(forwardRef(() => CajaService))
+        private localesStockService:LocalesStockService,
         private comprobanteService:ComprobanteService,
         private ventaDetallesService:VentaDetallesService,
         private clientesService:ClientesService,
@@ -315,16 +317,15 @@ export class VentasService {
 
     async editarConfirmarVenta(id:number, payload:any){ // Confirma la venta
 
+        // valores de configuracion
         const esCredito:boolean = (
             !!payload.creditoDetalles && 
             ( payload.tipo_venta === tipoVenta.credito || payload.tipo_venta === tipoVenta.adelanto )
         );
-
         const esComprobante:boolean = (
             ( payload.tipo_venta === tipoVenta.boleta || payload.tipo_venta === tipoVenta.factura) && 
             !!payload.comprobante
         );
-
         const formasPago:any = payload.formasPago;
         const cliente = payload.cliente;
         let idCliente:number = 0;
@@ -348,26 +349,25 @@ export class VentasService {
             idCliente = null;
         }
 
-        // estado_venta y cliente
-        const venta = await this.ventasRepo.findOne(id, { relations: ["ventaDetalles", "ventaDetalles.productos"] });
+        // busqueda de venta y añadir cliente a venta
+        const venta:any = await this.ventasRepo.findOne(id, { relations: ["ventaDetalles", "ventaDetalles.productos", "locales"] });
         if (idCliente !== 0) { // recupera id del cliente, en caso de que exista y cambie
             venta.clientes = idCliente;
         }
 
-        // estado venta
+        // guardamos venta
         this.ventasRepo.merge(venta, payload);
         await this.ventasRepo.save(venta);
 
-        // registrar ingresos ventas
+        // registrar ganancias a ingresos ventas
         if (!esCredito) {
             await this.ventasProviderService.addIngresosVenta(venta);
         }
         
-
-        // // ventasDetalles
-        // payload.ventaDetalles.forEach(async (detalle:any) => { 
-        //     await this.ventaDetallesService.editarDetalleVentas(detalle.id, payload.localId, detalle);
-        // });
+        // quitar productos del stock
+        await Promise.all(venta.ventaDetalles.map(async (e:any) => {
+            await this.localesStockService.quitarCantidadProductos(e.productos.id, venta.locales.id, e.cantidad_venta);
+        }));
 
         // formas de pagos
         if (formasPago.length > 0) {
@@ -398,7 +398,7 @@ export class VentasService {
             await this.comprobanteService.enviarComprobanteSunat(payload.comprobante, payload.localId);
         }
 
-        // // fin caja
+        // fin caja
         return payload;
     }
 
