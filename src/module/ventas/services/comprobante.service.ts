@@ -2,15 +2,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, Between } from 'typeorm';
 import axios from 'axios';
 import { Injectable } from '@nestjs/common';
-import * as moment from 'moment'; moment.locale('es');
 import { enviarCorreo } from 'src/assets/functions/enviarCorreo';
 import { Comprobante } from '../entities/comprobante.entity';
 import { ComprobanteDetallesService } from './comprobante-detalles.service';
 import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
-import { Caja } from 'src/module/locales/entities/caja.entity';
+// import { Caja } from 'src/module/locales/entities/caja.entity';
 import { CorrelativoService } from './correlativo.service';
 import { tipoVenta } from '../dtos/ventas.dto';
-import { CajaService } from 'src/module/locales/services/caja.service';
+// import { CajaService } from 'src/module/locales/services/caja.service';
 
 @Injectable()
 export class ComprobanteService {
@@ -354,7 +353,7 @@ export class ComprobanteService {
 
         // const nombreUsuario:string = "";
         const resumenVenta = "Resumen de venta";
-        const fechaActual = moment().format('D MMMM YYYY, h:mm:ss a');
+        const fechaActual = new Date();
         const template = `
             <div class="email-factura">
 
