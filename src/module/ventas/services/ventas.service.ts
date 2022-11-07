@@ -349,7 +349,7 @@ export class VentasService {
         }
 
         // estado_venta y cliente
-        const venta = await this.ventasRepo.findOne(id, { relations: ["ventaDetalles"] });
+        const venta = await this.ventasRepo.findOne(id, { relations: ["ventaDetalles", "ventaDetalles.productos"] });
         if (idCliente !== 0) { // recupera id del cliente, en caso de que exista y cambie
             venta.clientes = idCliente;
         }
@@ -357,6 +357,12 @@ export class VentasService {
         // estado venta
         this.ventasRepo.merge(venta, payload);
         await this.ventasRepo.save(venta);
+
+        // registrar ingresos ventas
+        if (!esCredito) {
+            await this.ventasProviderService.addIngresosVenta(venta);
+        }
+        
 
         // // ventasDetalles
         // payload.ventaDetalles.forEach(async (detalle:any) => { 
@@ -397,10 +403,12 @@ export class VentasService {
     }
 
 
-    async cambiarTipoVenta(id:number, payload:any){ 
+    async cambiarTipoVentaCredito(id:number, payload:any){ 
 
         let newTipoVenta = "";
-        const venta:any = await this.ventasRepo.findOne(id);
+        const venta:any = await this.ventasRepo.findOne(id, { 
+            relations: ["ventaDetalles", "ventaDetalles.productos"] 
+        });
 
         // convertir a VENTA RAPIDA
         venta.tipo_venta = payload.tipo_venta;
@@ -411,6 +419,10 @@ export class VentasService {
 
 
         // convertir a FACTURA
+
+
+        // añadir ganancias a ingresosVentas
+        await this.ventasProviderService.addIngresosVenta(venta);
 
         return {
             success: true,
@@ -900,6 +912,37 @@ export class VentasService {
 // await this.cajaRepo.save(caja);
 
 
+// Ventas {
+//     id: 706,
+//     tipo_venta: 'venta rapida',
+//     total: 105,
+//     subtotal: 105,
+//     observaciones: '',
+//     descuento_total: 0,
+//     codigo_venta: '00005',
+//     estado_venta: 'listo',
+//     forma_pago: 'efectivo',
+//     estado_producto: true,
+//     created_at: 2022-11-06T23:15:58.226Z,
+//     updated_at: 2022-11-06T23:15:58.226Z,
+//     clientes: null,
+//     ventaDetalles: [
+//       VentaDetalles {
+//         id: 755,
+//         cantidad_venta: 1,
+//         descuento: '0.00',
+//         forzar_venta: false,
+//         precio_venta: '105.00',
+//         precio_parcial: '105.00',
+//         venta_negativa: -6,
+//         estado_venta_detalle: 'listo',
+//         created_at: '2022-11-06T23:15:58.231Z',
+//         updated_at: '2022-11-06T23:15:58.231Z',
+//         productos: [Productos]
+//       }
+//     ],
+//     formasPago: []
+//   }
 
 
 

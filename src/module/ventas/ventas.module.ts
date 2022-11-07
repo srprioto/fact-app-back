@@ -32,6 +32,7 @@ import { CorrelativoController } from './controllers/correlativo.controller';
 import { CreditoDetallesService } from './services/credito-detalles.service';
 import { CreditoDetalles } from './entities/credito_detalles.entity';
 import { CreditoDetallesController } from './controllers/credito-detalles.controller';
+import { IngresosVentas } from './entities/ingresos-ventas.entity';
 
 
 @Module({
@@ -47,7 +48,8 @@ import { CreditoDetallesController } from './controllers/credito-detalles.contro
             Comprobante,
             ComprobanteDetalles,
             Correlativos,
-            CreditoDetalles
+            CreditoDetalles,
+            IngresosVentas
         ])
     ],
     providers: [ClientesService, VentaDetallesService, VentasService, FormasPagoService, ComprobanteService, ComprobanteDetallesService, VentasProviderService, CotizacionesService, CorrelativoService, CreditoDetallesService],

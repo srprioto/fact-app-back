@@ -17,7 +17,7 @@ import { FormasPago } from "./formas_pago.entity";
 import { Comprobante } from "./comprobante.entity";
 import { CreditoDetalles } from "./credito_detalles.entity";
 import { Caja } from "src/module/locales/entities/caja.entity";
-import { IngresosVentas } from "./ingresos-ventas";
+import { IngresosVentas } from "./ingresos-ventas.entity";
 
 enum EstadoVenta {
     cotizacion = "cotizacion",
@@ -109,14 +109,7 @@ export class Ventas {
     @OneToMany(() => CreditoDetalles, creditoDetalles => creditoDetalles.ventas)
     creditoDetalles:CreditoDetalles[];
 
-    // @OneToOne(() => IngresosVentas, ingresosVentas => ingresosVentas.ventas)
-    // ingresosVentas:number;
-
-
-
-
-    // @OneToOne(() => User, (user) => user.customer, { nullable: true }) 
-    // user:User;
-
+    @OneToOne(() => IngresosVentas, ingresosVentas => ingresosVentas.ventas)
+    ingresosVentas:IngresosVentas[];
 
 }

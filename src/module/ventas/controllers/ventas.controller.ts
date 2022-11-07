@@ -77,7 +77,7 @@ export class VentasController {
 
     @Put('cambiar_tipo_venta/:id')
     putCambiarTipoVenta(@Param('id', ParseIntPipe) id:number, @Body() payload:any){
-        return this.ventasService.cambiarTipoVenta(id, payload);
+        return this.ventasService.cambiarTipoVentaCredito(id, payload);
     }
 
     @Put('anular/:id')

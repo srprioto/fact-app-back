@@ -9,12 +9,15 @@ import { tipoVenta } from '../dtos/ventas.dto';
 import { sumaArrayObj } from 'src/assets/functions/sumaArrayObj';
 import { CajaDetallesService } from 'src/module/locales/services/caja-detalles.service';
 import { tipoMovimiento } from 'src/module/locales/dtos/caja-detalles.dto';
+import { tiposIngresos } from '../dtos/ingresos-ventas.dto';
+import { IngresosVentas } from '../entities/ingresos-ventas.entity';
 
 @Injectable()
 export class VentasProviderService {
 
     constructor(
         @InjectRepository(Ventas) private ventasRepo:Repository<Ventas>,
+        @InjectRepository(IngresosVentas) private ingresosVentasRepo:Repository<IngresosVentas>,
         private cajaDetallesService:CajaDetallesService,
         // @InjectRepository(Caja) private cajaRepo:Repository<Caja>,
         // private cajaService:CajaService,
@@ -23,7 +26,7 @@ export class VentasProviderService {
     async anulacionVenta(idVenta:number, notaBaja:string, usuarioId:number, idCajaActual:number){
 
         // actualizar y anular venta
-        const venta:any = await this.ventasRepo.findOne(idVenta, { relations: ["locales", "formasPago", "creditoDetalles", "caja"] });
+        const venta:any = await this.ventasRepo.findOne(idVenta, { relations: ["locales", "formasPago", "creditoDetalles", "caja", "ingresosVentas"] });
         const idCajaVenta:number = venta.caja ? venta.caja.id : 0;
 
         if (idCajaActual !== idCajaVenta) { // verifica que sea una anulacion pasada
@@ -49,13 +52,45 @@ export class VentasProviderService {
         venta.observaciones = notaBaja;
 
         const newVenta:any = this.ventasRepo.create(venta);
+
+        if (!!venta.ingresosVentas) {
+            await this.ingresosVentasRepo.delete(venta.ingresosVentas.id);
+        }
         await this.ventasRepo.save(newVenta);
 
         return { // aqui devolvemos true o false, dependiendo de si existe cantidad de dinero necesaria
             success: "Venta anulada correctamente"
         }
+    }
+
+
+    // venta REQUIERE "VENTADETALLES"
+    // los creditos se añaden hasta culminar y cancelar
+    async addIngresosVenta(venta:any){
+
+        const ventaDetalles:any = venta.ventaDetalles ? venta.ventaDetalles : [];
+        const totalIngreso:number = Number(venta.total);
+        let totalCosto:number = 0;
+
+        ventaDetalles.forEach((e:any) => {
+            totalCosto = totalCosto + (e.cantidad_venta * e.productos.precio_compra);
+        })
+
+        const totalGanancia:number = totalIngreso - totalCosto;
+        
+        const ingresosVentas:any = {
+            tipo_ingreso: tiposIngresos.ventas,
+            ingreso: totalIngreso,
+            costo: totalCosto,
+            ganancia: totalGanancia,
+            ventas: venta.id
+        }
+
+        await this.ingresosVentasRepo.save(ingresosVentas);
 
     }
+
+
 }
 
 
