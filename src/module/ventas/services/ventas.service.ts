@@ -1,13 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, Between, Not } from 'typeorm';
-import * as moment from 'moment'; moment.locale('es');
 import { Ventas } from '../entities/ventas.entity';
 import { Clientes } from '../entities/clientes.entity';
 import { AnularVentaDto, tipoVenta, UpdateVentasDto } from '../dtos/ventas.dto';
 import { VentaDetallesService } from './venta-detalles.service';
 import { ClientesService } from './clientes.service';
-
 import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { sumaArrayObj } from 'src/assets/functions/sumaArrayObj';
 import { Caja } from 'src/module/locales/entities/caja.entity';
@@ -18,8 +16,10 @@ import { CajaService } from 'src/module/locales/services/caja.service';
 import { VentasProviderService } from './ventas-provider.service';
 import { CreditoDetallesService } from './credito-detalles.service';
 import { LocalesStockService } from 'src/module/locales/services/locales-stock.service';
+import { ahora, fechaHaceUnaSemana, fechasHaceDias, inicioDia } from 'src/assets/functions/fechas';
 
 var xl = require('excel4node');
+
 
 @Injectable()
 export class VentasService {
@@ -392,7 +392,7 @@ export class VentasService {
             await this.comprobanteService.comprobanteEnviarCorreo(payload.comprobante, payload.envioComprobante);
         }
 
-        // *** envio de comprobante sunat ***
+        // ENVIO DE COMPROBANTES A SUNAT
         if (esComprobante && !esCredito) {
             payload.comprobante.clientes.id = idCliente;
             await this.comprobanteService.enviarComprobanteSunat(payload.comprobante, payload.localId);
@@ -593,16 +593,12 @@ export class VentasService {
     // estadisticas para los cards
     async estadisticasGenerales(){
 
-        const fechaActual:Date = new Date(); // fecha actual
-        const inicioDia:Date = new Date(fechaActual.toDateString()) // inicio del dia
-        const haceSemana:any = new Date((moment().subtract(7, 'days')).toString());
-
         const productosDia:any = await this.ventasRepo.find({
-            where: { updated_at: Between(inicioDia, fechaActual) }
+            where: { updated_at: Between(inicioDia(), ahora()) }
         });
 
         const productosUnaSemana:any = await this.ventasRepo.find({
-            where: { updated_at: Between(haceSemana, fechaActual) }
+            where: { updated_at: Between(fechaHaceUnaSemana(), ahora()) }
         });
 
         const totalPedidosDia:number = productosDia.length; // calcular total pedidos
@@ -625,7 +621,6 @@ export class VentasService {
             }
         });
 
-
         return{
             success: "Respusta",
             data: {
@@ -640,12 +635,12 @@ export class VentasService {
 
     // total ingresos dias por tienda
     async ingresosDiariosLocal(idLocal:number){ // por fecha (deprec)
-        const fechaActual:Date = new Date(); // frecha actual
-        const inicioDia:Date = new Date(fechaActual.toDateString()) // inicio del dia 
+        // const fechaActual:Date = new Date(); // frecha actual
+        // const inicioDia:Date = new Date(fechaActual.toDateString()) // inicio del dia 
         
         const productosDia:any = await this.ventasRepo.find({
             where: { 
-                updated_at: Between(inicioDia, fechaActual),
+                updated_at: Between(inicioDia(), ahora()),
                 locales: idLocal
             }
         });
@@ -668,57 +663,51 @@ export class VentasService {
     }
 
 
-    // total ingresos desde la apertura de caja, del dia, por tienda
-    async ingresosDiariosAperturaCaja(idLocal:number, fechaCaja:string){ // por fecha (deprec)
+    // // total ingresos desde la apertura de caja, del dia, por tienda
+    // async ingresosDiariosAperturaCaja(idLocal:number, fechaCaja:string){ // por fecha (deprec)
 
-        const iFechaCaja:Date = new Date(fechaCaja) // inicio del dia
-        const fechaActual:Date = new Date(); // frecha actual
+    //     const iFechaCaja:Date = new Date(fechaCaja) // inicio del dia
+    //     const fechaActual:Date = new Date(); // frecha actual
                 
-        const productosDia:any = await this.ventasRepo.find({
-            where: { 
-                updated_at: Between(iFechaCaja, fechaActual),
-                locales: idLocal
-            }
-        });
+    //     const productosDia:any = await this.ventasRepo.find({
+    //         where: { 
+    //             updated_at: Between(iFechaCaja, fechaActual),
+    //             locales: idLocal
+    //         }
+    //     });
 
-        let totalDineroDia:number = 0;
+    //     let totalDineroDia:number = 0;
 
-        productosDia.forEach((e:any) => {
-            if (e.estado_venta === 'listo') {
-                totalDineroDia = totalDineroDia + e.total;
-            }
-        });
+    //     productosDia.forEach((e:any) => {
+    //         if (e.estado_venta === 'listo') {
+    //             totalDineroDia = totalDineroDia + e.total;
+    //         }
+    //     });
 
-        return{
-            success: "Ingresos del dia",
-            data: {
-                totalDineroDia
-            }
-        }
+    //     return{
+    //         success: "Ingresos del dia",
+    //         data: {
+    //             totalDineroDia
+    //         }
+    //     }
 
-    }
+    // }
 
 
     // ventas se la semana, todos los productos que se venden
     async ventasSemana(){
 
-        // let ventasSemana:Array<any> = [];
         let totalVentasSemana:Array<any> = [];
 
-        for (let index = 0; index < 7; index++) {            
+        for (let index = 0; index < 7; index++) {
 
-            const dia = moment().subtract(index, 'days')
-
-            const fechaActual = dia.format('L');
-
-            const inidioDia = moment(fechaActual, "DDMMYYYY");
-            const finDia = inidioDia.clone().add(1, "day").subtract(1, 'second');
+            const [ inicioDia, finDia ] = fechasHaceDias(index);
 
             // created para contabilizar los pedidos
             // updated para contabilizar las ventas concluidas
             const ventasDia:any = await this.ventasRepo.find({ 
                 where: { 
-                    updated_at: Between(new Date(inidioDia.toString()), new Date(finDia.toString())),
+                    updated_at: Between(inicioDia, finDia),
                     estado_venta: "listo" // verifica que la venta sea correcta, y no rechazada
                 }
             });
@@ -726,7 +715,7 @@ export class VentasService {
             // ventasSemana.push(ventasDia);
             totalVentasSemana.push({
                 Cantidad: ventasDia.length,
-                Dia: moment(dia).format("L")
+                Dia: inicioDia
             });
 
         }
@@ -744,21 +733,14 @@ export class VentasService {
 
 
     async ingresosDia(idLocal:number, index?:number){
-
         const indice:number = index ? index : 0;
-
-        const dia = moment().subtract(indice, 'days')
-
-        const fechaActual = dia.format('L');
-
-        const inidioDia = moment(fechaActual, "DDMMYYYY");
-        const finDia = inidioDia.clone().add(1, "day").subtract(1, 'second');
+        const [ inicioDia, finDia ] = fechasHaceDias(indice);
 
         // created para contabilizar los pedidos
         // updated para contabilizar las ventas concluidas
         const ventasDia:any = await this.ventasRepo.find({ 
             where: { 
-                updated_at: Between(new Date(inidioDia.toString()), new Date(finDia.toString())),
+                updated_at: Between(inicioDia, finDia),
                 estado_venta: "listo",
                 locales: idLocal
             }
@@ -768,7 +750,7 @@ export class VentasService {
 
         return {
             Ingresos: totalVendidoHoy,
-            Dia: moment(dia).format("L")
+            Dia: inicioDia
         }
 
     }
