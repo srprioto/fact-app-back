@@ -9,6 +9,7 @@ import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginat
 // import { Caja } from 'src/module/locales/entities/caja.entity';
 import { CorrelativoService } from './correlativo.service';
 import { tipoVenta } from '../dtos/ventas.dto';
+import { ahora } from 'src/assets/functions/fechas';
 // import { CajaService } from 'src/module/locales/services/caja.service';
 
 @Injectable()
@@ -281,7 +282,8 @@ export class ComprobanteService {
         comprobante.verificacion = this.verificacion;
         comprobante.empresa = this.empresa;
         comprobante.notaBaja = payload.notaBaja;
-        comprobante.fecha_baja = new Date();
+        // comprobante.fecha_baja = new Date();
+        comprobante.fecha_baja = ahora();
 
         try {
             response = await axios.post(this.anularComprb, comprobante);
@@ -313,7 +315,8 @@ export class ComprobanteService {
         comprobante.verificacion = this.verificacion;
         comprobante.empresa = this.empresa;
         comprobante.notaBaja = payload.notaBaja;
-        comprobante.fecha_baja = new Date();
+        comprobante.fecha_baja = ahora();
+        // comprobante.fecha_baja = new Date();
         
         if (comprobante.clientes) {
             comprobante.cliente = comprobante.clientes;   
@@ -353,7 +356,8 @@ export class ComprobanteService {
 
         // const nombreUsuario:string = "";
         const resumenVenta = "Resumen de venta";
-        const fechaActual = new Date();
+        const fechaActual = ahora();
+        // const fechaActual = new Date();
         const template = `
             <div class="email-factura">
 

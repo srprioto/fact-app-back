@@ -16,7 +16,7 @@ import { CajaService } from 'src/module/locales/services/caja.service';
 import { VentasProviderService } from './ventas-provider.service';
 import { CreditoDetallesService } from './credito-detalles.service';
 import { LocalesStockService } from 'src/module/locales/services/locales-stock.service';
-import { ahora, fechaHaceUnaSemana, fechasHaceDias, inicioDia } from 'src/assets/functions/fechas';
+import { ahora, fechaHaceUnaSemana, fechaNoHora, fechasHaceDias, inicioDia } from 'src/assets/functions/fechas';
 
 var xl = require('excel4node');
 
@@ -591,7 +591,7 @@ export class VentasService {
 
     }
 
-    
+
     // estadisticas para los cards
     async estadisticasGenerales(){
 
@@ -637,8 +637,6 @@ export class VentasService {
 
     // total ingresos dias por tienda
     async ingresosDiariosLocal(idLocal:number){ // por fecha (deprec)
-        // const fechaActual:Date = new Date(); // frecha actual
-        // const inicioDia:Date = new Date(fechaActual.toDateString()) // inicio del dia 
         
         const productosDia:any = await this.ventasRepo.find({
             where: { 
@@ -717,7 +715,7 @@ export class VentasService {
             // ventasSemana.push(ventasDia);
             totalVentasSemana.push({
                 Cantidad: ventasDia.length,
-                Dia: inicioDia
+                Dia: fechaNoHora(inicioDia)
             });
 
         }

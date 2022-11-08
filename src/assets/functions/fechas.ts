@@ -57,5 +57,14 @@ export const fechasHaceDias = (dia:number) => {
     return [ inicio, fin ]
 }
 
+export const fechaNoHora = (fecha:any) => {
+    const newFecha:any = DateTime
+        .fromISO(fecha)
+        .setZone('UTC')
+        .setLocale('es')
+        .toFormat('dd/LL/yyyy');
+    return newFecha
+}
+
 
 
