@@ -508,7 +508,8 @@ export class VentasService {
         return data;
     }
 
-
+    
+    // descargar reporte de ventas
     async downloadReporteVentas(res:any){
 
         const wb = new xl.Workbook();
@@ -590,6 +591,7 @@ export class VentasService {
 
     }
 
+    
     // estadisticas para los cards
     async estadisticasGenerales(){
 
