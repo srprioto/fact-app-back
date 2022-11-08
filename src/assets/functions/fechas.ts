@@ -23,9 +23,11 @@ export const finDia = () => {
 }
 
 export const fechaInicioFinDia = () => { 
+    const inicio:string = inicioDia();
+    const fin:string = finDia();
     return [
-        inicioDia(),
-        finDia()
+        inicio,
+        fin
     ];
 }
 
