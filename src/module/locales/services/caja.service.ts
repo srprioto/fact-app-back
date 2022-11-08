@@ -146,16 +146,15 @@ export class CajaService {
 
     async localCajaIngresos(idLocal:number){ // *****
         const local:any = await this.localesRepo.findOne(idLocal);
-        const caja:any = await this.cajaIngresos(local.caja_actual);
-        
+        let caja:any = {};
+        if (local.caja_actual !== 0) {
+            caja = await this.cajaIngresos(local.caja_actual);    
+        }
+                
         return {
             success: "Ok",
-            data: {
-                local, 
-                caja
-            }
+            data: { local, caja }
         }
-        
     }
 
 
@@ -170,7 +169,7 @@ export class CajaService {
         let montoDeposito:number = 0;
         let otrosMovimientos:number = 0;
 
-        if (caja) {
+        if (!!caja) {
             const ventas:any = await this.ventasService.ventasCaja(caja.id);
             ventas.forEach((e:any) => {
                 if (e.formasPago.length > 0) {
@@ -220,91 +219,91 @@ export class CajaService {
     }
 
 
-    // ** obliterado **
-    async incrementoCajaNo(caja:any, formasPago:any, creditoDetalles:any, venta:any){ // requiere creditoDetalles
+    // // ** obliterado **
+    // async incrementoCajaNo(caja:any, formasPago:any, creditoDetalles:any, venta:any){ // requiere creditoDetalles
 
-        let anadirCajaTotal:number = 0;
-        const esCredito:boolean = (
-            !!creditoDetalles &&
-            ( venta.tipo_venta === tipoVenta.credito || venta.tipo_venta === tipoVenta.adelanto )
-        );
+    //     let anadirCajaTotal:number = 0;
+    //     const esCredito:boolean = (
+    //         !!creditoDetalles &&
+    //         ( venta.tipo_venta === tipoVenta.credito || venta.tipo_venta === tipoVenta.adelanto )
+    //     );
         
-        if (esCredito) {
-            anadirCajaTotal = sumaArrayObj(creditoDetalles, "cantidad_pagada");
-        } else {
-            anadirCajaTotal = venta.total;
-        }
+    //     if (esCredito) {
+    //         anadirCajaTotal = sumaArrayObj(creditoDetalles, "cantidad_pagada");
+    //     } else {
+    //         anadirCajaTotal = venta.total;
+    //     }
 
-        if (formasPago.length > 0) {
-            formasPago.forEach(async (e:any) => { 
-                if (e.forma_pago === "efectivo") {
-                    caja.monto_efectivo = Number(caja.monto_efectivo) + Number(e.precio_parcial);
-                } else if (e.forma_pago === "tarjeta") {
-                    caja.monto_tarjeta = Number(caja.monto_tarjeta) + Number(e.precio_parcial);
-                } else if (e.forma_pago === "pago_electronico") {
-                    caja.monto_pago_electronico = Number(caja.monto_pago_electronico) + Number(e.precio_parcial);
-                } else if (e.forma_pago === "deposito") {
-                    caja.monto_deposito = Number(caja.monto_deposito) + Number(e.precio_parcial);
-                }
-            })
-        } else {
-            if (venta.forma_pago === "efectivo") {
-                caja.monto_efectivo = Number(caja.monto_efectivo) + Number(anadirCajaTotal);
-            } else if (venta.forma_pago === "tarjeta") {
-                caja.monto_tarjeta = Number(caja.monto_tarjeta) + Number(anadirCajaTotal);
-            } else if (venta.forma_pago === "pago_electronico") {
-                caja.monto_pago_electronico = Number(caja.monto_pago_electronico) + Number(anadirCajaTotal);
-            } else if (venta.forma_pago === "deposito") {
-                caja.monto_deposito = Number(caja.monto_deposito) + Number(anadirCajaTotal);
-            }
-        }
+    //     if (formasPago.length > 0) {
+    //         formasPago.forEach(async (e:any) => { 
+    //             if (e.forma_pago === "efectivo") {
+    //                 caja.monto_efectivo = Number(caja.monto_efectivo) + Number(e.precio_parcial);
+    //             } else if (e.forma_pago === "tarjeta") {
+    //                 caja.monto_tarjeta = Number(caja.monto_tarjeta) + Number(e.precio_parcial);
+    //             } else if (e.forma_pago === "pago_electronico") {
+    //                 caja.monto_pago_electronico = Number(caja.monto_pago_electronico) + Number(e.precio_parcial);
+    //             } else if (e.forma_pago === "deposito") {
+    //                 caja.monto_deposito = Number(caja.monto_deposito) + Number(e.precio_parcial);
+    //             }
+    //         })
+    //     } else {
+    //         if (venta.forma_pago === "efectivo") {
+    //             caja.monto_efectivo = Number(caja.monto_efectivo) + Number(anadirCajaTotal);
+    //         } else if (venta.forma_pago === "tarjeta") {
+    //             caja.monto_tarjeta = Number(caja.monto_tarjeta) + Number(anadirCajaTotal);
+    //         } else if (venta.forma_pago === "pago_electronico") {
+    //             caja.monto_pago_electronico = Number(caja.monto_pago_electronico) + Number(anadirCajaTotal);
+    //         } else if (venta.forma_pago === "deposito") {
+    //             caja.monto_deposito = Number(caja.monto_deposito) + Number(anadirCajaTotal);
+    //         }
+    //     }
 
-        await this.cajaRepo.save(caja);
+    //     await this.cajaRepo.save(caja);
 
-    }
+    // }
     
     
-    // ** obliterado **
-    async descuentoCajaNo(caja:any, formasPago:any, creditoDetalles:any, venta:any){ // requiere creditoDetalles
+    // // ** obliterado **
+    // async descuentoCajaNo(caja:any, formasPago:any, creditoDetalles:any, venta:any){ // requiere creditoDetalles
 
-        let anadirCajaTotal:number = 0;
-        const esCredito:boolean = (
-            !!creditoDetalles &&
-            ( venta.tipo_venta === tipoVenta.credito || venta.tipo_venta === tipoVenta.adelanto )
-        );
+    //     let anadirCajaTotal:number = 0;
+    //     const esCredito:boolean = (
+    //         !!creditoDetalles &&
+    //         ( venta.tipo_venta === tipoVenta.credito || venta.tipo_venta === tipoVenta.adelanto )
+    //     );
         
-        if (esCredito) {
-            anadirCajaTotal = sumaArrayObj(creditoDetalles, "cantidad_pagada");
-        } else {
-            anadirCajaTotal = venta.total;
-        }   
+    //     if (esCredito) {
+    //         anadirCajaTotal = sumaArrayObj(creditoDetalles, "cantidad_pagada");
+    //     } else {
+    //         anadirCajaTotal = venta.total;
+    //     }   
 
-        if (formasPago.length > 0) {
-            formasPago.forEach(async (e:any) => { 
-                if (e.forma_pago === "efectivo") {
-                    caja.monto_efectivo = Number(caja.monto_efectivo) - Number(e.precio_parcial);
-                } else if (e.forma_pago === "tarjeta") {
-                    caja.monto_tarjeta = Number(caja.monto_tarjeta) - Number(e.precio_parcial);
-                } else if (e.forma_pago === "pago_electronico") {
-                    caja.monto_pago_electronico = Number(caja.monto_pago_electronico) - Number(e.precio_parcial);
-                } else if (e.forma_pago === "deposito") {
-                    caja.monto_deposito = Number(caja.monto_deposito) - Number(e.precio_parcial);
-                }
-            })
-        } else {
-            if (venta.forma_pago === "efectivo") {
-                caja.monto_efectivo = Number(caja.monto_efectivo) - Number(venta.total);
-            } else if (venta.forma_pago === "tarjeta") {
-                caja.monto_tarjeta = Number(caja.monto_tarjeta) - Number(venta.total);
-            } else if (venta.forma_pago === "pago_electronico") {
-                caja.monto_pago_electronico = Number(caja.monto_pago_electronico) - Number(venta.total);
-            } else if (venta.forma_pago === "deposito") {
-                caja.monto_deposito = Number(caja.monto_deposito) - Number(venta.total);
-            }
-        }
+    //     if (formasPago.length > 0) {
+    //         formasPago.forEach(async (e:any) => { 
+    //             if (e.forma_pago === "efectivo") {
+    //                 caja.monto_efectivo = Number(caja.monto_efectivo) - Number(e.precio_parcial);
+    //             } else if (e.forma_pago === "tarjeta") {
+    //                 caja.monto_tarjeta = Number(caja.monto_tarjeta) - Number(e.precio_parcial);
+    //             } else if (e.forma_pago === "pago_electronico") {
+    //                 caja.monto_pago_electronico = Number(caja.monto_pago_electronico) - Number(e.precio_parcial);
+    //             } else if (e.forma_pago === "deposito") {
+    //                 caja.monto_deposito = Number(caja.monto_deposito) - Number(e.precio_parcial);
+    //             }
+    //         })
+    //     } else {
+    //         if (venta.forma_pago === "efectivo") {
+    //             caja.monto_efectivo = Number(caja.monto_efectivo) - Number(venta.total);
+    //         } else if (venta.forma_pago === "tarjeta") {
+    //             caja.monto_tarjeta = Number(caja.monto_tarjeta) - Number(venta.total);
+    //         } else if (venta.forma_pago === "pago_electronico") {
+    //             caja.monto_pago_electronico = Number(caja.monto_pago_electronico) - Number(venta.total);
+    //         } else if (venta.forma_pago === "deposito") {
+    //             caja.monto_deposito = Number(caja.monto_deposito) - Number(venta.total);
+    //         }
+    //     }
 
-        await this.cajaRepo.save(caja);
-    }
+    //     await this.cajaRepo.save(caja);
+    // }
 
 
 
