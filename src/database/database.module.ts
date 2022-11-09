@@ -9,7 +9,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
                 return {
                     type: 'mysql',
                     host: process.env.HOSTNAME,
-                    port: parseInt(process.env.PORT_DB), 
+                    // port: parseInt(process.env.PORT_DB), 
                     username: process.env.USER,
                     password: process.env.PASSWORD,
                     database: process.env.DATABASE,
