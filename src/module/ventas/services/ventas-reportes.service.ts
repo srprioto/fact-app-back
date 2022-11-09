@@ -17,6 +17,7 @@ export class VentasReportesService {
 
     async reporteIngresosVentas(){
         
+        
     }
     
 
