@@ -78,7 +78,7 @@ export class VentasService {
         }
 
         if (inicio !== "_" || fin !== "_" ) {
-            where.updated_at = Between(inicio, fin);
+            where.created_at = Between(inicio, fin);
         }
 
         const ventas:any = await paginate<Ventas>(this.ventasRepo, options, {

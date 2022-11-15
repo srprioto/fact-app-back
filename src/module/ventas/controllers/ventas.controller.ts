@@ -18,7 +18,6 @@ import { AnularVentaDto, CreateVentasDto, UpdateVentasDto } from '../dtos/ventas
 import { Ventas } from '../entities/ventas.entity';
 import { VentasService } from '../services/ventas.service';
 
-// import xl from 'excel4node';
 
 @Controller('ventas')
 export class VentasController {

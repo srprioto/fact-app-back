@@ -34,6 +34,7 @@ import { CreditoDetalles } from './entities/credito_detalles.entity';
 import { CreditoDetallesController } from './controllers/credito-detalles.controller';
 import { IngresosVentas } from './entities/ingresos-ventas.entity';
 import { VentasReportesService } from './services/ventas-reportes.service';
+import { VentasReportesController } from './controllers/ventas-reportes.controller';
 
 
 @Module({
@@ -54,7 +55,7 @@ import { VentasReportesService } from './services/ventas-reportes.service';
         ])
     ],
     providers: [ClientesService, VentaDetallesService, VentasService, FormasPagoService, ComprobanteService, ComprobanteDetallesService, VentasProviderService, CotizacionesService, CorrelativoService, CreditoDetallesService, VentasReportesService],
-    controllers: [ClientesController, VentaDetallesController, VentasController, ComprobanteController, CotizacionesController, CorrelativoController, CreditoDetallesController],
+    controllers: [ClientesController, VentaDetallesController, VentasController, ComprobanteController, CotizacionesController, CorrelativoController, CreditoDetallesController, VentasReportesController],
     exports: [VentasService]
 })
 export class VentasModule {}

@@ -31,6 +31,31 @@ export const fechaInicioFinDia = () => {
     ];
 }
 
+export const inicioMes = () => { 
+    return DateTime
+        .now()
+        .setZone('America/Lima')
+        .startOf('month')
+        .toISO();
+}
+
+export const finMes = () => { 
+    return DateTime
+        .now()
+        .setZone('America/Lima')
+        .endOf('month')
+        .toISO();
+}
+
+export const fechaInicioFinMes = () => { 
+    const inicio:string = inicioMes();
+    const fin:string = finMes();
+    return [
+        inicio,
+        fin
+    ];
+}
+
 export const fechaHaceUnaSemana = () => { 
     return DateTime
         .now()
