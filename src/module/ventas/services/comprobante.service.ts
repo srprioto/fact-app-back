@@ -56,10 +56,16 @@ export class ComprobanteService {
         options: IPaginationOptions
     ): Promise<Pagination<Comprobante>> {
 
-        const where:any = {};
+        let where:any = {};
 
         if (filtro != "_") {
-            where.estado_sunat = filtro;
+            if (filtro === "ANULADO") {
+                where.estado_sunat = Like(`Anula%`)
+            } else if (filtro === "ERROR") {
+                where.estado_sunat = Like(`Error%`)
+            } else {
+                where.estado_sunat = filtro;
+            }
         }
         if (idLocal != "_") {
             where.locales = idLocal;
