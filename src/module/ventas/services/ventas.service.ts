@@ -459,7 +459,7 @@ export class VentasService {
                 // anulacion de comprobante
                 if (venta.tipo_venta === tipoVenta.factura) {
                     // anular factura                    
-                    const response:any = await this.comprobanteService.anularFactura(comprobante, payload);
+                    const response:any = await this.comprobanteService.anularFactura(comprobante, payload, locales.id);
                     if (response.estado === "Anulado" || response.estado === "Anulacion procesada"){
                         // anular venta
                         await this.ventasProviderService.anulacionVenta(idVenta, payload.notaBaja, payload.usuarioId, caja.id);

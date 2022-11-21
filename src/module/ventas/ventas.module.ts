@@ -54,8 +54,29 @@ import { VentasReportesController } from './controllers/ventas-reportes.controll
             IngresosVentas
         ])
     ],
-    providers: [ClientesService, VentaDetallesService, VentasService, FormasPagoService, ComprobanteService, ComprobanteDetallesService, VentasProviderService, CotizacionesService, CorrelativoService, CreditoDetallesService, VentasReportesService],
-    controllers: [ClientesController, VentaDetallesController, VentasController, ComprobanteController, CotizacionesController, CorrelativoController, CreditoDetallesController, VentasReportesController],
+    providers: [
+        ClientesService, 
+        VentaDetallesService, 
+        VentasService, 
+        FormasPagoService, 
+        ComprobanteService, 
+        ComprobanteDetallesService, 
+        VentasProviderService, 
+        CotizacionesService, 
+        CorrelativoService, 
+        CreditoDetallesService, 
+        VentasReportesService
+    ],
+    controllers: [
+        ClientesController, 
+        VentaDetallesController, 
+        VentasController, 
+        ComprobanteController, 
+        CotizacionesController, 
+        CorrelativoController, 
+        CreditoDetallesController, 
+        VentasReportesController
+    ],
     exports: [VentasService]
 })
 export class VentasModule {}

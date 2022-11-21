@@ -10,6 +10,8 @@ import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginat
 import { CorrelativoService } from './correlativo.service';
 import { tipoVenta } from '../dtos/ventas.dto';
 import { ahora } from 'src/assets/functions/fechas';
+import { TicketsService } from 'src/module/locales/services/tickets.service';
+import { estados_comprobante } from '../dtos/comprobante.dto';
 // import { CajaService } from 'src/module/locales/services/caja.service';
 
 @Injectable()
@@ -43,7 +45,7 @@ export class ComprobanteService {
         private comprobanteDetallesService:ComprobanteDetallesService,
         // private ventasProviderService:VentasProviderService,
         private correlativoService:CorrelativoService,
-        // private cajaService:CajaService,
+        private ticketsService:TicketsService
     ){ }
 
 
@@ -151,8 +153,8 @@ export class ComprobanteService {
         comprobante.created_at = payload.created_at;
         comprobante.tipoMoneda = "PEN";
         comprobante.tipoOperacion = "10"; // gravada 10 / exonerada 20
-        if (payload.tipo_venta === tipoVenta.factura) comprobante.tipoComprobante = "01";
-        if (payload.tipo_venta === tipoVenta.boleta) comprobante.tipoComprobante = "03";
+        if (payload.tipo_venta === tipoVenta.factura) comprobante.tipoComprobante = "051";
+        if (payload.tipo_venta === tipoVenta.boleta) comprobante.tipoComprobante = "053";
        
         // venta
         comprobante.subtotal = Number(payload.subtotal.toFixed(5));
@@ -207,9 +209,33 @@ export class ComprobanteService {
             console.log(error);
         }
 
-        await this.registrarComprobante(comprobante, idLocal, response, payload.id, correlativo.id);
+        const newComprobante:any = await this.registrarComprobante(comprobante, idLocal, response, payload.id, correlativo.id);
+
+        // crear ticket en caso de falla
+        if (
+            response.estado === estados_comprobante.Error_envio || 
+            response.estado === estados_comprobante.Rechazado
+        ) {
+            const titulo:string = response.estado === estados_comprobante.Error_envio 
+            ? "Error en envio de comprobante nro: " + newComprobante.data.id
+            : "Comprobante enviado rechazado nro: " + newComprobante.data.id
+            await this.ticketsService.create({
+                titulo: titulo,
+                descripcion: response.msgErr,
+                info_adicional: "",
+                tipo: response.estado,
+                estado: false,
+                relacion: JSON.stringify({
+                    tabla: "Comprobante",
+                    id: newComprobante.data.id
+                }),
+                local: payload.locales.id,
+                // usuario: "",
+            });
+        }
 
         return response;
+
     }
 
 
@@ -233,7 +259,8 @@ export class ComprobanteService {
         })
 
         return {
-            success: "registro correcto"
+            success: "registro correcto",
+            data: respuesta
         }
     }
 
@@ -276,13 +303,36 @@ export class ComprobanteService {
 
         await this.comprobanteRepo.save(comprobante);
 
+        // crear ticket en caso de falla
+        if (
+            response.estado === estados_comprobante.Error_envio || 
+            response.estado === estados_comprobante.Rechazado
+        ) {
+            const titulo:string = response.estado === estados_comprobante.Error_envio 
+            ? "Error en reenvio de comprobante nro: " + comprobante.id
+            : "Comprobante reenviado rechazado nro: " + comprobante.id;
+            await this.ticketsService.create({
+                titulo: titulo,
+                descripcion: response.msgErr,
+                info_adicional: "",
+                tipo: response.estado,
+                estado: false,
+                relacion: JSON.stringify({
+                    tabla: "Comprobante",
+                    id: comprobante.id
+                }),
+                local: data.locales.id,
+                // usuario: "",
+            });
+        }
+
         return response;
-        // return data;
+
     }
     
 
-    async anularFactura(comprobante:any, payload:any){
-        
+    async anularFactura(comprobante:any, payload:any, localId:number){
+
         let response:any = {};
 
         comprobante.verificacion = this.verificacion;
@@ -306,6 +356,29 @@ export class ComprobanteService {
         const anulado = this.comprobanteRepo.create(comprobante);
         await this.comprobanteRepo.save(anulado);
 
+        // ticket de anulacion de facturas
+        if (
+            response.estado === estados_comprobante.Error_anulacion ||
+            response.estado === estados_comprobante.Anulacion_procesada
+        ) {
+            const titulo:string = response.estado === estados_comprobante.Error_anulacion
+            ? "Error de anulacion en factura nro: " + comprobante.id
+            : "Anulacion procesada en factura nro: " + comprobante.id;
+            await this.ticketsService.create({
+                titulo: titulo,
+                descripcion: response.msgErr,
+                info_adicional: "",
+                tipo: response.estado,
+                estado: false,
+                relacion: JSON.stringify({
+                    tabla: "Comprobante",
+                    id: comprobante.id
+                }),
+                local: localId,
+                // usuario: "",
+            });
+        }
+
         return response;
         
     }
@@ -314,7 +387,7 @@ export class ComprobanteService {
     async anularBoleta(comprobanteId:number, payload:any){
 
         let response:any = {};
-        const comprobante:any = await this.comprobanteRepo.findOne(comprobanteId, { relations: ["clientes"] });
+        const comprobante:any = await this.comprobanteRepo.findOne(comprobanteId, { relations: ["clientes", "locales"] });
 
         // comprobante.serie = comprobante.serie + "-" + comprobante.correlativo;
         comprobante.serie = comprobante.serie;
@@ -352,6 +425,29 @@ export class ComprobanteService {
 
         const anulado = this.comprobanteRepo.create(comprobante);
         await this.comprobanteRepo.save(anulado);
+
+        // ticket de anulacion de boletas
+        if (
+            response.estado === estados_comprobante.Error_anulacion ||
+            response.estado === estados_comprobante.Anulacion_procesada
+        ) {            
+            const titulo:string = response.estado === estados_comprobante.Error_anulacion 
+            ? "Error de anulacion en boleta nro: " + comprobante.id
+            : "Anulacion procesada en boleta nro: " + comprobante.id;
+            await this.ticketsService.create({
+                titulo: titulo,
+                descripcion: response.msgErr,
+                info_adicional: "",
+                tipo: response.estado,
+                estado: false,
+                relacion: JSON.stringify({
+                    tabla: "Comprobante",
+                    id: comprobante.id
+                }),
+                local: comprobante.locales.id,
+                // usuario: "",
+            });
+        }
 
         return response;
 

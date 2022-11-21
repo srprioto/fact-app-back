@@ -1,7 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-
 import { ProductosModule } from '../productos/productos.module';
 import { UsuariosModule } from '../usuarios/usuarios.module';
 
@@ -33,6 +32,9 @@ import { Transacciones } from './entities/transacciones.entity';
 import { Caja } from './entities/caja.entity';
 import { CajaDetalles } from './entities/caja-detalles.entity';
 import { VentasModule } from '../ventas/ventas.module';
+import { Tickets } from './entities/tickets.entity';
+import { TicketsService } from './services/tickets.service';
+import { TicketsController } from './controllers/tickets.controller';
 
 
 @Module({
@@ -46,7 +48,8 @@ import { VentasModule } from '../ventas/ventas.module';
             TransaccionDetalles, 
             Transacciones,
             Caja,
-            CajaDetalles
+            CajaDetalles,
+            Tickets
         ]), 
         // forwardRef(() => ProductosModule),
         ProductosModule,
@@ -61,9 +64,25 @@ import { VentasModule } from '../ventas/ventas.module';
         ProveedoresService, 
         TransaccionesService, 
         CajaService, 
-        CajaDetallesService
+        CajaDetallesService, TicketsService
     ],
-    controllers: [LocalesStockController, LocalesController, MovimientoDetallesController, MovimientosController, ProveedoresController, TransaccionesController, CajaController, CajaDetallesController],
-    exports: [TypeOrmModule, LocalesStockService, CajaService, CajaDetallesService]
+    controllers: [
+        LocalesStockController, 
+        LocalesController, 
+        MovimientoDetallesController, 
+        MovimientosController, 
+        ProveedoresController, 
+        TransaccionesController, 
+        CajaController, 
+        CajaDetallesController, 
+        TicketsController
+    ],
+    exports: [
+        TypeOrmModule, 
+        LocalesStockService, 
+        CajaService, 
+        CajaDetallesService, 
+        TicketsService
+    ]
 })
 export class LocalesModule {}
