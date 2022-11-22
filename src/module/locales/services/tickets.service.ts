@@ -26,11 +26,14 @@ export class TicketsService {
 
 
     async getOne(id:number){ 
-        const ticket:any = await this.ticketsRepo.findOne(id);
-        console.log(ticket);
+        const ticket:Tickets = await this.ticketsRepo.findOne(id, {
+            relations: ["local"]
+        });
+        ticket.estado = true;
+        const newTicket:Tickets = await this.ticketsRepo.save(ticket);
         return {
-            success: "ticket listo",
-            data: ticket
+            success: "ticket visto",
+            data: newTicket
         };        
     }
 

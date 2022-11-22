@@ -153,8 +153,8 @@ export class ComprobanteService {
         comprobante.created_at = payload.created_at;
         comprobante.tipoMoneda = "PEN";
         comprobante.tipoOperacion = "10"; // gravada 10 / exonerada 20
-        if (payload.tipo_venta === tipoVenta.factura) comprobante.tipoComprobante = "051";
-        if (payload.tipo_venta === tipoVenta.boleta) comprobante.tipoComprobante = "053";
+        if (payload.tipo_venta === tipoVenta.factura) comprobante.tipoComprobante = "01";
+        if (payload.tipo_venta === tipoVenta.boleta) comprobante.tipoComprobante = "03";
        
         // venta
         comprobante.subtotal = Number(payload.subtotal.toFixed(5));

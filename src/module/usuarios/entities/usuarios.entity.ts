@@ -10,9 +10,7 @@ import {
 
 import { Ventas } from "src/module/ventas/entities/ventas.entity";
 import { Roles } from "./roles.entity";
-import { Productos } from "src/module/productos/entities/productos.entity";
 import { Transacciones } from "src/module/locales/entities/transacciones.entity";
-import { Caja } from "src/module/locales/entities/caja.entity";
 import { Locales } from "src/module/locales/entities/locales.entity";
 import { Exclude } from "class-transformer";
 
