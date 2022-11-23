@@ -17,7 +17,7 @@ export class TicketsController {
         @Param('localId') localId:string,
     ): Promise<Pagination<Tickets>> {
         limit = limit > 100 ? 100 : limit;
-        const options:any = { page, limit, route: `/tickets` }
+        const options:any = { page, limit, route: `/tickets/paginate/${localId}` }
         return this.ticketsService.paginate(localId, options);
     }
 
