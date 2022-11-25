@@ -35,6 +35,9 @@ import { CreditoDetallesController } from './controllers/credito-detalles.contro
 import { IngresosVentas } from './entities/ingresos-ventas.entity';
 import { VentasReportesService } from './services/ventas-reportes.service';
 import { VentasReportesController } from './controllers/ventas-reportes.controller';
+import { IngresosEgresosService } from './services/ingresos-egresos.service';
+import { IngresosEgresos } from './entities/ingresos_egresos.entity';
+import { IngresosEgresosController } from './controllers/ingresos-egresos.controller';
 
 
 @Module({
@@ -51,7 +54,8 @@ import { VentasReportesController } from './controllers/ventas-reportes.controll
             ComprobanteDetalles,
             Correlativos,
             CreditoDetalles,
-            IngresosVentas
+            IngresosVentas,
+            IngresosEgresos
         ])
     ],
     providers: [
@@ -65,7 +69,8 @@ import { VentasReportesController } from './controllers/ventas-reportes.controll
         CotizacionesService, 
         CorrelativoService, 
         CreditoDetallesService, 
-        VentasReportesService
+        VentasReportesService, 
+        IngresosEgresosService
     ],
     controllers: [
         ClientesController, 
@@ -75,7 +80,8 @@ import { VentasReportesController } from './controllers/ventas-reportes.controll
         CotizacionesController, 
         CorrelativoController, 
         CreditoDetallesController, 
-        VentasReportesController
+        VentasReportesController, 
+        IngresosEgresosController
     ],
     exports: [VentasService]
 })
