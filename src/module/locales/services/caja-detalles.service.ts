@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { Repository, IsNull } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
+
 // import { sumaArrayObj } from 'src/assets/functions/sumaArrayObj';
-import { Repository } from 'typeorm'
 import { CreateCajaDetalesDto } from '../dtos/caja-detalles.dto';
 import { CajaDetalles } from '../entities/caja-detalles.entity';
 import { Caja } from '../entities/caja.entity';
@@ -13,6 +15,31 @@ export class CajaDetallesService {
         @InjectRepository(CajaDetalles) private cajaDetallesRepo:Repository<CajaDetalles>,
         @InjectRepository(Caja) private cajaRepo:Repository<Caja>
     ){}
+    
+
+    async paginate(idLocal:string, options:IPaginationOptions):Promise<Pagination<CajaDetalles>> {
+        const where:any = {};
+        if (idLocal !== "_") {
+            if (idLocal === "No") {
+                where.locales = IsNull();
+            } else {
+                where.locales = idLocal;
+            }
+        }
+
+        // SELECT sum(monto_movimiento)
+        // FROM caja_detalles
+        // where (created_at BETWEEN "2022-11-25T00:00:00.000-05:00" AND "2022-11-25T23:59:59.999-05:00")
+        // AND tipo_movimiento = "Otros movimientos"
+
+        return paginate<CajaDetalles>(this.cajaDetallesRepo, options, {
+            // relations: ["usuarios", "locales"],
+            order: { id: "DESC" },
+            where: where
+        });
+    }
+
+    
 
     async post(payload:CreateCajaDetalesDto) {
 

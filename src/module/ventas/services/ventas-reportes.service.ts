@@ -67,21 +67,95 @@ export class VentasReportesService {
         const startMonth:string = inicioMes ? inicioMes : inicio;
         const endMonth:string = finMes ? finMes : fin;
 
-        const query = await consulta(`
-            select IF(sum(ganancia) = null, 0, sum(ganancia)) as Ganancias_dia, DATE_FORMAT(created_at, "%d/%m/%Y")  as "Fecha"
-            from ingresos_ventas 
-            where created_at BETWEEN '` + startMonth + `' AND  '` + endMonth + `'
-            group by Fecha
+        const queryGananciasVentas = await consulta(`
+            SELECT 
+                sum(ganancia) as Ganancias_dia, 
+                sum(ingreso) as Ingresos_dia, 
+                sum(costo) as Costos_dia, 
+                DATE_FORMAT(created_at, "%d/%m/%Y")  as "Fecha"
+            FROM ingresos_ventas 
+            WHERE created_at BETWEEN '` + startMonth + `' AND  '` + endMonth + `'
+            GROUP BY Fecha
+            ORDER BY Fecha desc
         `);
 
-        const sumaGanancias = sumaArrayObj(query, "Ganancias_dia");
+        const queryIngresosEgresos = await consulta(`
+            SELECT 
+                sum(monto) as Ingresos_egresos_dia,
+                DATE_FORMAT(created_at, "%d/%m/%Y")  as "Fecha"
+            FROM ingresos_egresos
+            WHERE (created_at BETWEEN '` + startMonth + `' AND  '` + endMonth + `')
+            GROUP BY Fecha
+            ORDER BY Fecha desc
+        `);
+
+        const queryCajaDetalles = await consulta(`
+            SELECT 
+                sum(monto_movimiento) as Otros_movimientos_dia,
+                DATE_FORMAT(created_at, "%d/%m/%Y")  as "Fecha"
+            FROM caja_detalles
+            WHERE (created_at BETWEEN '` + startMonth + `' AND  '` + endMonth + `')
+            AND tipo_movimiento = "Otros movimientos"
+            GROUP BY Fecha
+            ORDER BY Fecha desc
+        `);
+
+        // console.log(queryIngresosEgresos);
+        // console.log(queryGananciasVentas);
+        // console.log(queryCajaDetalles);
+
+        const sumaIngresos = sumaArrayObj(queryGananciasVentas, "Ingresos_dia");
+        const sumaCostos = sumaArrayObj(queryGananciasVentas, "Costos_dia");
+        const sumaGanancias = sumaArrayObj(queryGananciasVentas, "Ganancias_dia");
+
+
+
+        // // Este es tu array inicial
+        // var arr = [
+        //     ...queryIngresosEgresos,
+        //     ...queryGananciasVentas,
+        //     ...queryCajaDetalles
+        // ],
+        // //Y aca se va a guardar el resultado
+        // result = [];
+
+        // console.log(arr);
+        
+
+        // // Recorro el array elemento por elemento
+        // arr.forEach(function (a) {
+            
+        //     // Me fijo si el elemento que voy a cargar ya existe, si no existe, lo creo con dinero en 0
+        //     if (!this[a.nombre]) {
+        //         this[a.nombre] = { nombre: a.nombre, dinero: 0 };
+        //         result.push(this[a.nombre]);
+        //     }
+        //     // Y luego le sumo el dinero (en el caso que ya exista, no se crea, solo se le suma el dinero)
+        //     this[a.nombre].dinero += a.dinero;
+        // // Como segundo argumento de la funcion del foreach paso [] para que retorne un array.
+        // }, []);
+
+        // console.log(result);
+
 
         return {
-            query: query,
-            sumaGanancias: sumaGanancias
+            query: queryGananciasVentas,
+            sumaMontos: {
+                sumaIngresos,
+                sumaCostos,
+                sumaGanancias
+            }
         };
 
     }
     
 
 }
+
+
+// const query = await consulta(`
+//     select IF(sum(ganancia) = null, 0, sum(ganancia)) as Ganancias_dia, DATE_FORMAT(created_at, "%d/%m/%Y")  as "Fecha"
+//     from ingresos_ventas 
+//     where created_at BETWEEN '` + startMonth + `' AND  '` + endMonth + `'
+//     group by Fecha
+// `);

@@ -173,7 +173,7 @@ export class CajaService {
             const ventas:any = await this.ventasService.ventasCaja(caja.id);
             ventas.forEach((e:any) => {
                 if (e.formasPago.length > 0) {
-                    e.formasPago.forEach(async (e:any) => { 
+                    e.formasPago.forEach(async (e:any) => {
                         if (e.forma_pago === "efectivo") {
                             montoEfectivo = Number(montoEfectivo) + Number(e.precio_parcial);
                         } else if (e.forma_pago === "tarjeta") {

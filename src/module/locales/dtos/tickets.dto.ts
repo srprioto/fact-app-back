@@ -36,7 +36,7 @@ export class CreateTicketDto {
     
     @IsOptional()
     @IsNumber()
-    usuario?:number;
+    rol?:number;
 
     // @IsOptional()
     // @IsNumber()

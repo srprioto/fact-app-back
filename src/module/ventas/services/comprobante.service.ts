@@ -230,7 +230,7 @@ export class ComprobanteService {
                     id: newComprobante.data.id
                 }),
                 local: payload.locales.id,
-                // usuario: "",
+                rol: 2,
             });
         }
 
@@ -322,7 +322,7 @@ export class ComprobanteService {
                     id: comprobante.id
                 }),
                 local: data.locales.id,
-                // usuario: "",
+                rol: 2,
             });
         }
 
@@ -375,7 +375,7 @@ export class ComprobanteService {
                     id: comprobante.id
                 }),
                 local: localId,
-                // usuario: "",
+                rol: 2,
             });
         }
 
@@ -445,7 +445,7 @@ export class ComprobanteService {
                     id: comprobante.id
                 }),
                 local: comprobante.locales.id,
-                // usuario: "",
+                rol: 2,
             });
         }
 

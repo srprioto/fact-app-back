@@ -6,9 +6,9 @@ import {
     UpdateDateColumn,
     ManyToOne
 } from "typeorm";
-import { Usuarios } from "src/module/usuarios/entities/usuarios.entity";
 import { Locales } from "./locales.entity";
-import { Ventas } from "src/module/ventas/entities/ventas.entity";
+import { Roles } from "src/module/usuarios/entities/roles.entity";
+
 
 @Entity()
 export class Tickets {
@@ -45,8 +45,8 @@ export class Tickets {
     @ManyToOne(() => Locales, { nullable: true })
     local:number;
 
-    @ManyToOne(() => Usuarios, { nullable: true })
-    usuario:number;
+    @ManyToOne(() => Roles, { nullable: true })
+    rol:number;
 
     // @ManyToOne(() => Ventas, { nullable: true })
     // comprobante:number;

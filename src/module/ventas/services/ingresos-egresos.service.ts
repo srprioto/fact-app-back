@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Repository, Like } from 'typeorm';
+import { Repository, Like, IsNull } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IngresosEgresos } from '../entities/ingresos_egresos.entity';
 import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
@@ -14,10 +14,19 @@ export class IngresosEgresosService {
     ){}
 
 
-    async paginate(options:IPaginationOptions):Promise<Pagination<IngresosEgresos>> {
+    async paginate(idLocal:string, options:IPaginationOptions):Promise<Pagination<IngresosEgresos>> {
+        const where:any = {};
+        if (idLocal !== "_") {
+            if (idLocal === "No") {
+                where.locales = IsNull();
+            } else {
+                where.locales = idLocal;
+            }
+        }
         return paginate<IngresosEgresos>(this.ingresosEgresosRepo, options, {
             relations: ["usuarios", "locales"],
-            order: { id: "DESC" }
+            order: { id: "DESC" },
+            where: where
         });
     }
 
