@@ -16,8 +16,8 @@ export class IngresosVentas {
     @PrimaryGeneratedColumn()
     id:number;
 
-    @Column({type: "varchar", length: 15})
-    tipo_ingreso:string;
+    // @Column({type: "varchar", length: 15})
+    // tipo_ingreso:string;
 
     @Column({type: "decimal", precision: 10, scale: 2, default: 0})
     ingreso:number;

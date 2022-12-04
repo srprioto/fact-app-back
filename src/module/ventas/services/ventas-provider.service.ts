@@ -9,7 +9,6 @@ import { tipoVenta } from '../dtos/ventas.dto';
 import { sumaArrayObj } from 'src/assets/functions/sumaArrayObj';
 import { CajaDetallesService } from 'src/module/locales/services/caja-detalles.service';
 import { tipoMovimiento } from 'src/module/locales/dtos/caja-detalles.dto';
-import { tiposIngresos } from '../dtos/ingresos-ventas.dto';
 import { IngresosVentas } from '../entities/ingresos-ventas.entity';
 import { LocalesStockService } from 'src/module/locales/services/locales-stock.service';
 
@@ -91,7 +90,7 @@ export class VentasProviderService {
         const totalGanancia:number = totalIngreso - totalCosto;
         
         const ingresosVentas:any = {
-            tipo_ingreso: tiposIngresos.ventas,
+            // tipo_ingreso: tiposIngresos.ventas,
             ingreso: totalIngreso,
             costo: totalCosto,
             ganancia: totalGanancia,

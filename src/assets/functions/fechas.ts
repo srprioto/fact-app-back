@@ -85,11 +85,38 @@ export const fechasHaceDias = (dia:number) => {
 export const fechaNoHora = (fecha:any) => {
     const newFecha:any = DateTime
         .fromISO(fecha)
-        .setZone('UTC')
+        .setZone('America/Lima')
         .setLocale('es')
         .toFormat('dd/LL/yyyy');
     return newFecha
 }
 
+export const fechaDesdeJson = (fecha:string) => {
+    const resto:any = fecha;
+    return DateTime
+        .fromObject(resto)
+        .setZone('America/Lima')
+        .setLocale('es')
+        .toISO();
+}
+
+
+
+export const inicioFinFechaJson = (fecha:any) => { 
+    const inidioDia = DateTime
+        .fromObject(fecha)
+        .startOf('day')
+        .toISO();
+
+    const finDia = DateTime
+        .fromObject(fecha)
+        .endOf('day')
+        .toISO();
+
+    return [
+        inidioDia,
+        finDia
+    ];
+}
 
 

@@ -35,6 +35,9 @@ export class VentasReportesController {
         return this.ventasReportesService.registroGananciasMes(payload);
     }
 
-
+    @Post('ganancias_reporte_dia')
+    postGananciasReporteDia(@Body() payload:any){
+        return this.ventasReportesService.gananciasReporteDia(payload);
+    }
 
 }
