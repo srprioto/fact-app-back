@@ -27,7 +27,7 @@ export class RolesGuard implements CanActivate {
         const isAuth = roles.some((role) => role === user.role)
 
         if (!isAuth) {
-            throw new UnauthorizedException("your role is wrong");            
+            throw new UnauthorizedException("your role is wrong");
         }
 
         return isAuth;
