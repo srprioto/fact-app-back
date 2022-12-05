@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, Between, Not } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { fechaInicioFinDia, fechaInicioFinMes, inicioFinFechaJson } from 'src/assets/functions/fechas';
 import { consulta } from 'src/assets/functions/queryBuilder';
 import { sumaArrayObj, sumaArrayObjRepetidos } from 'src/assets/functions/sumaArrayObj';
@@ -205,6 +205,7 @@ export class VentasReportesService {
             order: { id: "DESC" },
             where: {
                 created_at: Between(inicioDia, finDia),
+                tipo_movimiento: tipoMovimiento.ingresosEgresosCaja,
                 caja: whereMovCaja
             }
         });
