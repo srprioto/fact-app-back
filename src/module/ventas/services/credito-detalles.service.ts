@@ -27,7 +27,7 @@ export class CreditoDetallesService {
 
     async anadirCreditoDetalles(payload:any){
 
-        // aqui modificar estado de producto - por codicion
+        // modificacion de estado de producto(entregado o no) - por codicion
         if (payload.mod_estado_prod) {
             const venta:any = {};
             venta.id = payload.ventas;
@@ -36,24 +36,10 @@ export class CreditoDetallesService {
             await this.ventasRepo.save(venta);
         }
 
-        // gestion de cantidades
+        // gestion de montos pagados
         if (payload.cantidad_pagada > 0) {
             // añade detalles credito adelanto
             await this.crearCreditoAdelanto(payload);
-            
-            // // aqui añadimos ingreso a caja - condicionada por forma de pago
-            // // anulamos desde aqui
-            // const venta:any = await this.ventasRepo.findOne(payload.ventas);
-            // venta.forma_pago = payload.forma_pago
-            // const caja:any = await this.cajaRepo.findOne({
-            //     where: {
-            //         locales: { id: payload.localId, tipo_local: "tienda" },
-            //         estado_caja: true
-            //     }
-            // })
-            // const creditoDetalles:any = [{ cantidad_pagada: payload.cantidad_pagada }]
-            // await this.cajaService.incrementoCaja(caja, [], creditoDetalles, venta);
-            // // hasta anulamos desde aqui
 
             // añade forma de pago de la venta, no de la caja
             const formasPago:Array<any> = [{
@@ -74,22 +60,21 @@ export class CreditoDetallesService {
 
     async crearCreditoAdelanto(payload:any){
 
+        const ventaActual:any = await this.ventasRepo.findOne(payload.ventas, {
+            relations: ["caja", "usuarios", "locales"]
+        });
+
         const cajaActual:any = await this.cajaRepo.findOne({
             where: {
-                locales: { id: payload.localId, tipo_local: "tienda" },
+                locales: { id: ventaActual.locales.id, tipo_local: "tienda" },
                 estado_caja: true
             }
         })
-
-        const ventaActual:any = await this.ventasRepo.findOne(payload.ventas, {
-            relations: ["caja", "usuarios"]
-        });
 
         payload.fecha_estimada = new Date(payload.fecha_estimada);
         const creditoDetalles:any = this.creditoDetallesRepo.create(payload);
         const resto:any = await this.creditoDetallesRepo.save(creditoDetalles);
         const notaCredito:string = payload.nota ? payload.nota : "Pago de credito"
-
 
         const idCajaVenta:number = ventaActual.caja ? ventaActual.caja.id : 0;
         const idCajaActual:number = cajaActual ? cajaActual.id : 0;
@@ -110,3 +95,17 @@ export class CreditoDetallesService {
     }
     
 }
+            
+// // aqui añadimos ingreso a caja - condicionada por forma de pago
+// // anulamos desde aqui
+// const venta:any = await this.ventasRepo.findOne(payload.ventas);
+// venta.forma_pago = payload.forma_pago
+// const caja:any = await this.cajaRepo.findOne({
+//     where: {
+//         locales: { id: payload.localId, tipo_local: "tienda" },
+//         estado_caja: true
+//     }
+// })
+// const creditoDetalles:any = [{ cantidad_pagada: payload.cantidad_pagada }]
+// await this.cajaService.incrementoCaja(caja, [], creditoDetalles, venta);
+// // hasta anulamos desde aqui

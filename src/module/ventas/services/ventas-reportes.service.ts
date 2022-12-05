@@ -184,7 +184,8 @@ export class VentasReportesService {
         const ingresosVentasDia:any = await this.ingresosVentasRepo.find({ 
             relations: ["ventas"],
             select: ["ingreso", "costo", "ganancia", "ventas"],
-            where: { 
+            order: { id: "DESC" },
+            where: {
                 created_at: Between(inicioDia, finDia),
                 ventas: whereIVentas
             }
@@ -192,19 +193,21 @@ export class VentasReportesService {
         const ingresosEgresosDia:any = await this.ingresosEgresosRepo.find({
             relations: ["locales"],
             select: ["monto", "descripcion", "tipo", "locales"],
-            where: { 
+            order: { id: "DESC" },
+            where: {
                 created_at: Between(inicioDia, finDia),
                 locales: whereIngEgre
             }
-        })
+        });
         const movimientosCaja:any = await this.cajaDetallesRepo.find({
             relations: ["caja", "caja.locales"],
             select: ["monto_movimiento", "descripcion"],
-            where: { 
+            order: { id: "DESC" },
+            where: {
                 created_at: Between(inicioDia, finDia),
                 caja: whereMovCaja
             }
-        })
+        });
 
         // suma de ingresos de ventas
         const sumaIngresosVentas:number = sumaArrayObj(ingresosVentasDia, "ingreso");
