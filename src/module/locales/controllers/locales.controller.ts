@@ -1,9 +1,21 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, UseGuards, DefaultValuePipe } from '@nestjs/common';
-import { Pagination } from 'nestjs-typeorm-paginate';
+import { 
+    Body, 
+    Controller, 
+    Delete, 
+    Get, 
+    Param, 
+    ParseIntPipe, 
+    Post, 
+    Put, 
+    // Query, 
+    // UseGuards, 
+    // DefaultValuePipe 
+} from '@nestjs/common';
+// import { Pagination } from 'nestjs-typeorm-paginate';
 
 import { LocalesService } from '../services/locales.service';
 import { CreateLocalesDto, UpdateLocalesDto } from '../dtos/locales.dto';
-import { Locales } from '../entities/locales.entity';
+
 
 @Controller('locales')
 export class LocalesController {

@@ -1,4 +1,4 @@
-import { Body, Controller, DefaultValuePipe, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, DefaultValuePipe, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { CreateCajaDetalesDto } from '../dtos/caja-detalles.dto';
 import { CajaDetalles } from '../entities/caja-detalles.entity';

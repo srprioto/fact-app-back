@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, DefaultValuePipe, Query } from '@nestjs/common';
-import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, DefaultValuePipe, Query } from '@nestjs/common';
+import { Pagination } from 'nestjs-typeorm-paginate';
 import { CreateCajaDto, UpdateCajaDto } from '../dtos/caja.dto';
 import { Caja } from '../entities/caja.entity';
 

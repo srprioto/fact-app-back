@@ -6,8 +6,6 @@ import { CreateCajaDto } from '../dtos/caja.dto';
 import { Caja } from '../entities/caja.entity';
 import { Locales } from '../entities/locales.entity';
 import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
-import { tipoVenta } from 'src/module/ventas/dtos/ventas.dto';
-import { sumaArrayObj } from 'src/assets/functions/sumaArrayObj';
 
 
 @Injectable()
@@ -196,6 +194,8 @@ export class CajaService {
                     }
                 }
             });
+            
+            // suma de caja detalles para otros montos
             caja.cajaDetalles.forEach((e:any) => { 
                 if (e.forma_pago === "efectivo") {
                     otrosMovimientos = Number(otrosMovimientos) + Number(e.monto_movimiento)
@@ -209,11 +209,11 @@ export class CajaService {
             })
         }
 
-        caja.monto_efectivo = montoEfectivo;
         caja.monto_tarjeta = montoTarjeta;
         caja.monto_pago_electronico = montoPagoElectronico;
         caja.monto_deposito = montoDeposito;
         caja.otros_montos = otrosMovimientos;
+        caja.monto_efectivo = (Number(montoEfectivo) + Number(otrosMovimientos));
 
         return caja;
     }
