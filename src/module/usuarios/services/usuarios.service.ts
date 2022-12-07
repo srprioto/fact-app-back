@@ -4,7 +4,7 @@ import { Repository, Like } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
 
-import { Roles } from '../entities/roles.entity';
+// import { Roles } from '../entities/roles.entity';
 import { Usuarios } from '../entities/usuarios.entity';
 import { CreateUsuariosDto } from '../dtos/usuarios.dto';
 // import { Locales } from 'src/module/locales/entities/locales.entity';
