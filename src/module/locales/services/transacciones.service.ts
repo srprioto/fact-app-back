@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository, Like, IsNull, Not } from 'typeorm';
 import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
 
 import { Transacciones } from '../entities/transacciones.entity';
@@ -20,22 +20,35 @@ export class TransaccionesService {
 
     async paginateFiltro(value:string = "_", options: IPaginationOptions): Promise<Pagination<Transacciones>> {
 
-        if (value === "_") {
-            return paginate<Transacciones>(this.transaccionesRepo, options, {
-                relations: [
-                    "localDestino"
-                ],
-                order: { created_at: "DESC" }
-            });
-        } else {
-            return paginate<Transacciones>(this.transaccionesRepo, options, {
-                relations: [
-                    "localDestino"
-                ],
-                where: { estado_general: value },
-                order: { created_at: "DESC" }
-            });
+        const where:any = { localOrigen: Not(IsNull()) };
+
+        if (value !== "_") {
+            where.estado_general = value;
         }
+
+        return await paginate<Transacciones>(this.transaccionesRepo, options, {
+            relations: [
+                "localDestino",
+                "localOrigen"
+            ],
+            order: { created_at: "DESC" },
+            where: where
+        });
+        
+    }
+
+
+    async searchData(value:string){
+        const data = await this.transaccionesRepo.find({
+            relations: [
+                "localDestino"
+            ],
+            where: [
+                { id: Like(`%${Number(value)}%`) },
+                { descripcion: Like(`%${value}%`) }
+            ]
+        });
+        return data
     }
 
 
@@ -247,23 +260,28 @@ export class TransaccionesService {
 
     }
 
-
-    async searchData(value:string){
-        const data = await this.transaccionesRepo.find({
-            relations: [
-                "localDestino"
-            ],
-            where: [
-                { id: Like(`%${Number(value)}%`) },
-                { descripcion: Like(`%${value}%`) }
-            ]
-        });
-        return data
-    }
-
-
 }
 
+
+// async paginateFiltro(value:string = "_", options: IPaginationOptions): Promise<Pagination<Transacciones>> {
+
+//     if (value === "_") {
+//         return paginate<Transacciones>(this.transaccionesRepo, options, {
+//             relations: [
+//                 "localDestino"
+//             ],
+//             order: { created_at: "DESC" }
+//         });
+//     } else {
+//         return paginate<Transacciones>(this.transaccionesRepo, options, {
+//             relations: [
+//                 "localDestino"
+//             ],
+//             where: { estado_general: value },
+//             order: { created_at: "DESC" }
+//         });
+//     }
+// }
 
 
 // async put(id:number, payload:any){

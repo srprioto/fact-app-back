@@ -71,7 +71,7 @@ export class VentasService {
         }
         if (idLocal !== "_") {
             where.locales = idLocal;
-        }        
+        }
         if (filtro === tipoVenta.credito) {
             where.estado_venta = "listo";
             where.tipo_venta = filtro;
@@ -82,7 +82,16 @@ export class VentasService {
         }
 
         const ventas:any = await paginate<Ventas>(this.ventasRepo, options, {
-            relations: ["locales", "comprobante", "creditoDetalles"],
+            select: [
+                "tipo_venta",
+                "total",
+                "forma_pago",
+                "estado_venta",
+                "created_at",
+                "id",
+                "codigo_venta"
+            ],
+            relations: ["locales", "comprobante", "creditoDetalles", "ventaDetalles", "ventaDetalles.productos"],
             order: { id: "DESC" },
             where: where
         });

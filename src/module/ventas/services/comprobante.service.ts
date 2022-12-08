@@ -304,27 +304,27 @@ export class ComprobanteService {
         await this.comprobanteRepo.save(comprobante);
 
         // crear ticket en caso de falla
-        if (
-            response.estado === estados_comprobante.Error_envio || 
-            response.estado === estados_comprobante.Rechazado
-        ) {
-            const titulo:string = response.estado === estados_comprobante.Error_envio 
-            ? "Error en reenvio de comprobante nro: " + comprobante.id
-            : "Comprobante reenviado rechazado nro: " + comprobante.id;
-            await this.ticketsService.create({
-                titulo: titulo,
-                descripcion: response.msgErr,
-                info_adicional: "",
-                tipo: response.estado,
-                estado: false,
-                relacion: JSON.stringify({
-                    tabla: "Comprobante",
-                    id: comprobante.id
-                }),
-                local: data.locales.id,
-                rol: 2,
-            });
-        }
+        // if (
+        //     response.estado === estados_comprobante.Error_envio || 
+        //     response.estado === estados_comprobante.Rechazado
+        // ) {
+        //     const titulo:string = response.estado === estados_comprobante.Error_envio 
+        //     ? "Error en reenvio de comprobante nro: " + comprobante.id
+        //     : "Comprobante reenviado rechazado nro: " + comprobante.id;
+        //     await this.ticketsService.create({
+        //         titulo: titulo,
+        //         descripcion: response.msgErr,
+        //         info_adicional: "",
+        //         tipo: response.estado,
+        //         estado: false,
+        //         relacion: JSON.stringify({
+        //             tabla: "Comprobante",
+        //             id: comprobante.id
+        //         }),
+        //         local: data.locales.id,
+        //         rol: 2,
+        //     });
+        // }
 
         return response;
 
