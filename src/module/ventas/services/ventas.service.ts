@@ -407,7 +407,6 @@ export class VentasService {
             await this.comprobanteService.enviarComprobanteSunat(payload.comprobante, payload.localId);
         }
 
-        // fin caja
         return payload;
     }
 
