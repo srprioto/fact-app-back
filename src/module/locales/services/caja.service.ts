@@ -213,7 +213,7 @@ export class CajaService {
         caja.monto_pago_electronico = montoPagoElectronico;
         caja.monto_deposito = montoDeposito;
         caja.otros_montos = otrosMovimientos;
-        caja.monto_efectivo = (Number(montoEfectivo) + Number(otrosMovimientos));
+        caja.monto_efectivo = Number(montoEfectivo) + Number(caja.otros_montos);
 
         return caja;
     }
