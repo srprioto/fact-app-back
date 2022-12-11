@@ -138,7 +138,7 @@ export class VentasService {
         }
 
         const data = await this.ventasRepo.find({
-            relations: ["locales", "comprobante", "creditoDetalles", "clientes"],
+            relations: ["locales", "comprobante", "creditoDetalles", "clientes", "ventaDetalles", "ventaDetalles.productos"],
             order: { id: "DESC" },
             where: where
         });
@@ -152,6 +152,8 @@ export class VentasService {
             delete elemento.creditoDetalles;
             return elemento;
         });
+
+        console.log(resto);        
 
         return resto;
     }
