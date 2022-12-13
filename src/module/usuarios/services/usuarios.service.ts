@@ -69,22 +69,19 @@ export class UsuariosService {
 
     async put(id:number, payload:any){
         const elemento = await this.usuariosRepo.findOne(id);
-        elemento.password = await bcrypt.hash(elemento.password, 10);
-        elemento.roles = payload.rolesId;
-
-        // if (payload.rolesId) {
-        //     const roles = await this.rolesRepo.findOne(payload.rolesId)
-        //     elemento.roles = roles;
-        // }
+        this.usuariosRepo.merge(elemento, payload);
 
         elemento.locales = payload.localesId ? payload.localesId : null;
+        elemento.roles = payload.rolesId;
+        if (!!payload.password) {
+            elemento.password = await bcrypt.hash(payload.password, 10);
+        }
 
-        this.usuariosRepo.merge(payload, elemento);
         const data:Usuarios = await this.usuariosRepo.save(elemento);
 
         return{
             success: "Registro actualizado",
-            data
+            elemento
         }
     }
 
