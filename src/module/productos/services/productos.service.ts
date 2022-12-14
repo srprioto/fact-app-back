@@ -56,16 +56,43 @@ export class ProductosService {
 
     
     async post(payload:CreateProductosDto){
-        let restoProducto:any;
-        if (payload.switchCrear) {
-            restoProducto = await this.crearProductoCompleto(payload);
-        } else {
-            restoProducto = await this.crearProductoSimple(payload);
-        }        
-        return {
-            exito: "Registro creado",
-            data: restoProducto
+
+        let producto:any = [];
+        const where:any = {
+            nombre: payload.nombre,
+            marca: payload.marca,
+            color: payload.color,
+            talla: payload.talla
         }
+        if (payload.switchCrear) {
+            where.codigo = payload.codigo;
+        }
+
+        producto = await this.productosRepo.findOne({
+            where: where
+        })
+        
+        if (!!producto) {
+            return {
+                warning: "Producto existente",
+                data: producto,
+                estado: false
+            }
+        } else {
+            let restoProducto:any;
+            if (payload.switchCrear) {
+                restoProducto = await this.crearProductoCompleto(payload);
+            } else {
+                restoProducto = await this.crearProductoSimple(payload);
+            }  
+            return {
+                success: "Registro creado",
+                data: restoProducto,
+                estado: true
+            }
+
+        }
+
     }
 
 
