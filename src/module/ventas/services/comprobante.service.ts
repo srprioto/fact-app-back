@@ -17,6 +17,8 @@ import { estados_comprobante } from '../dtos/comprobante.dto';
 @Injectable()
 export class ComprobanteService {
 
+    private IGV:number = 1.18;
+
     private emitirComprb:string = process.env.EMITIR_COMP;
     private anularComprb:string = process.env.ANULAR_COMP;
     private verificacion:any = {
@@ -157,9 +159,9 @@ export class ComprobanteService {
         if (payload.tipo_venta === tipoVenta.boleta) comprobante.tipoComprobante = "03";
        
         // venta
-        comprobante.subtotal = Number(payload.subtotal.toFixed(5));
-        comprobante.igvGeneral = Number(payload.igvGeneral.toFixed(5));
-        comprobante.total = Number(payload.total.toFixed(5));
+        comprobante.subtotal = Number(payload.subtotal).toFixed(5);
+        comprobante.igvGeneral = Number(payload.igvGeneral).toFixed(5);
+        comprobante.total = Number(payload.total).toFixed(5);
 
         // cliente
         if (!!payload.clientes.numero_documento) {
@@ -182,20 +184,22 @@ export class ComprobanteService {
 
         // venta detalles
         payload.ventaDetalles.forEach((e:any) => {
+            const precioUnidad = Number(e.precio_parcial) / Number(e.cantidad_venta);
+
+            const precioGravada:number = Number(precioUnidad / this.IGV);
+            const igvDetalle:number = Number(precioUnidad) - precioGravada;
+
             const updateVentaDet:any = {};
             updateVentaDet.codigo = e.productos.id;
             updateVentaDet.nombre = e.productos.nombre;
             updateVentaDet.cantidad_venta = e.cantidad_venta;
-            updateVentaDet.igv = Number(e.igv.toFixed(5));
-            updateVentaDet.unidad_sin_igv = Number(e.precio_gravada.toFixed(5));
-            updateVentaDet.unidad_con_igv = Number(e.precio_venta.toFixed(5));
+            updateVentaDet.igv = Number(igvDetalle).toFixed(5);
+            updateVentaDet.unidad_sin_igv = Number(precioGravada).toFixed(5);
+            updateVentaDet.unidad_con_igv = Number(precioUnidad).toFixed(5);
+        
             ventaDetalles.push(updateVentaDet);
         })
 
-        // comprobante.accion = "nuevo_" + payload.serie;
-        // const respuesta:any = await this.crearComprobante(comprobante);
-
-        // comprobante.id = respuesta.id; // correlativo
         comprobante.verificacion = this.verificacion;
         comprobante.empresa = this.empresa;
         comprobante.ventaDetalles = ventaDetalles;
@@ -235,7 +239,9 @@ export class ComprobanteService {
         }
 
         return response;
-
+        // comprobante.accion = "nuevo_" + payload.serie;
+        // const respuesta:any = await this.crearComprobante(comprobante);
+        // comprobante.id = respuesta.id; // correlativo
     }
 
 

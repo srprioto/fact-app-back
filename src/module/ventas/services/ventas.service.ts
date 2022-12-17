@@ -18,11 +18,14 @@ import { CreditoDetallesService } from './credito-detalles.service';
 import { LocalesStockService } from 'src/module/locales/services/locales-stock.service';
 import { ahora, fechaHaceUnaSemana, fechaNoHora, fechasHaceDias, inicioDia } from 'src/assets/functions/fechas';
 
+
 var xl = require('excel4node');
 
 
 @Injectable()
 export class VentasService {
+
+    private IGV:number = 1.18;
 
     constructor(
         @InjectRepository(Ventas) private ventasRepo:Repository<Ventas>,
@@ -338,27 +341,12 @@ export class VentasService {
             !!payload.comprobante
         );
         const formasPago:any = payload.formasPago;
-        const cliente = payload.cliente;
+        // const cliente = payload.cliente;
         let idCliente:number = 0;
         let newCreditoDetalles:Array<any> = [];
 
         // gestion cliente
-        if (cliente.numero_documento){
-            const searchCliente = await this.clientesRepo.findOne({
-                where: {numero_documento: cliente.numero_documento}
-            })
-            if (!!searchCliente) { 
-                // editar cliente
-                await this.clientesService.put(searchCliente.id, cliente);
-                idCliente = searchCliente.id;
-            } else { 
-                // crear cliente
-                const newCliente:any = await this.clientesService.post(cliente);
-                idCliente = newCliente.data.id;
-            }   
-        } else {
-            idCliente = null;
-        }
+        idCliente = await this.clientesService.nuevoClienteId(payload.cliente);
 
         // busqueda de venta y añadir cliente a venta
         const venta:any = await this.ventasRepo.findOne(id, { relations: ["ventaDetalles", "ventaDetalles.productos", "locales"] });
@@ -366,7 +354,7 @@ export class VentasService {
             venta.clientes = idCliente;
         }
 
-        // guardamos venta
+        // actualizar venta
         this.ventasRepo.merge(venta, payload);
         await this.ventasRepo.save(venta);
 
@@ -413,7 +401,7 @@ export class VentasService {
     }
 
 
-    async cambiarTipoVentaCredito(id:number, payload:any){ 
+    async cambiarVentaCredito(id:number, payload:any){ 
 
         let newTipoVenta = "";
         const venta:any = await this.ventasRepo.findOne(id, { 
@@ -439,6 +427,34 @@ export class VentasService {
             id: venta.id,
             tipo_venta: newTipoVenta
         };    
+    }
+
+
+    async cambiarTipoComp(id:number, payload:any){
+
+        const venta:any = await this.ventasRepo.findOne(id, { relations: ["ventaDetalles", "ventaDetalles.productos", "locales"] });
+        venta.tipo_venta = payload.tipoComprobante;
+        venta.igvGeneral = Number(venta.total) - Number(venta.total / this.IGV);
+        venta.clientes = payload.cliente;
+        venta.subtotal = venta.total - venta.igvGeneral;
+        venta.created_at = ahora();
+
+        // registro de cliente
+        const idCliente:number = await this.clientesService.nuevoClienteId(payload.cliente);
+
+        // actualizar venta
+        const updateVenta:any = {
+            id: venta.id,
+            tipo_venta: payload.tipoComprobante,
+            clientes: idCliente
+        }
+        await this.ventasRepo.save(updateVenta);
+
+        // ENVIO DE COMPROBANTES A SUNAT
+        venta.clientes.id = idCliente;
+        await this.comprobanteService.enviarComprobanteSunat(venta, venta.locales.id);
+
+        return venta;
     }
 
 

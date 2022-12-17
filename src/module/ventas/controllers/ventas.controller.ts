@@ -75,8 +75,13 @@ export class VentasController {
     }
 
     @Put('cambiar_tipo_venta/:id')
-    putCambiarTipoVenta(@Param('id', ParseIntPipe) id:number, @Body() payload:any){
-        return this.ventasService.cambiarTipoVentaCredito(id, payload);
+    putCambiarVentaCredito(@Param('id', ParseIntPipe) id:number, @Body() payload:any){
+        return this.ventasService.cambiarVentaCredito(id, payload);
+    }
+
+    @Put('cambiar_tipo_comprobante/:id')
+    putCambiarTipoComp(@Param('id', ParseIntPipe) id:number, @Body() payload:any){
+        return this.ventasService.cambiarTipoComp(id, payload);
     }
 
     @Put('anular/:id')

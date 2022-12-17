@@ -66,6 +66,28 @@ export class ClientesService {
     }
 
 
+    async nuevoClienteId(cliente:any){
+        let idCliente:number;
+        if (cliente.numero_documento){
+            const searchCliente = await this.clientesRepo.findOne({
+                where: {numero_documento: cliente.numero_documento}
+            })
+            if (!!searchCliente) { 
+                // editar cliente
+                await this.put(searchCliente.id, cliente);
+                idCliente = searchCliente.id;
+            } else { 
+                // crear cliente
+                const newCliente:any = await this.post(cliente);
+                idCliente = newCliente.data.id;
+            }   
+        } else {
+            idCliente = null;
+        }
+        return idCliente;
+    }
+
+
     async verificarCliente(payload:any){
         
         const cliente = await this.clientesRepo.findOne({
