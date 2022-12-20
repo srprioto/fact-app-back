@@ -125,7 +125,7 @@ export class ComprobanteService {
         return data;
     }
 
-
+    
     async getOne(id:number) {
         const data:any = await this.comprobanteRepo.findOne(id,{
             relations: ["clientes", "locales", "comprobanteDetalles", "ventas", "correlativos"]
@@ -191,7 +191,7 @@ export class ComprobanteService {
 
             const updateVentaDet:any = {};
             updateVentaDet.codigo = e.productos.id;
-            updateVentaDet.nombre = e.productos.nombre;
+            updateVentaDet.nombre = e.productos.nombre + " - " + e.productos.marca + " - " + e.productos.talla;
             updateVentaDet.cantidad_venta = e.cantidad_venta;
             updateVentaDet.igv = Number(igvDetalle).toFixed(5);
             updateVentaDet.unidad_sin_igv = Number(precioGravada).toFixed(5);
@@ -238,7 +238,7 @@ export class ComprobanteService {
             });
         }
 
-        return response;
+        return newComprobante;
         // comprobante.accion = "nuevo_" + payload.serie;
         // const respuesta:any = await this.crearComprobante(comprobante);
         // comprobante.id = respuesta.id; // correlativo

@@ -154,9 +154,7 @@ export class VentasService {
             }
             delete elemento.creditoDetalles;
             return elemento;
-        });
-
-        console.log(resto);        
+        });   
 
         return resto;
     }
@@ -452,9 +450,10 @@ export class VentasService {
 
         // ENVIO DE COMPROBANTES A SUNAT
         venta.clientes.id = idCliente;
-        await this.comprobanteService.enviarComprobanteSunat(venta, venta.locales.id);
+        const comprobante:any = await this.comprobanteService.enviarComprobanteSunat(venta, venta.locales.id);
+        
+        return comprobante;
 
-        return venta;
     }
 
 
