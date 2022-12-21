@@ -330,13 +330,14 @@ export class VentasService {
     async editarConfirmarVenta(id:number, payload:any){ // Confirma la venta
 
         // valores de configuracion
+        const comprobante:any = payload.comprobante;
         const esCredito:boolean = (
             !!payload.creditoDetalles && 
             ( payload.tipo_venta === tipoVenta.credito || payload.tipo_venta === tipoVenta.adelanto )
         );
         const esComprobante:boolean = (
             ( payload.tipo_venta === tipoVenta.boleta || payload.tipo_venta === tipoVenta.factura) && 
-            !!payload.comprobante
+            !!comprobante
         );
         const formasPago:any = payload.formasPago;
         // const cliente = payload.cliente;
@@ -344,6 +345,7 @@ export class VentasService {
         let newCreditoDetalles:Array<any> = [];
 
         // gestion cliente
+        comprobante.clientes = payload.cliente;
         idCliente = await this.clientesService.nuevoClienteId(payload.cliente);
 
         // busqueda de venta y añadir cliente a venta
@@ -386,13 +388,13 @@ export class VentasService {
 
         // envio por correo electronico
         if (!!payload.envioComprobante) { 
-            await this.comprobanteService.comprobanteEnviarCorreo(payload.comprobante, payload.envioComprobante);
+            await this.comprobanteService.comprobanteEnviarCorreo(comprobante, payload.envioComprobante);
         }
 
         // ENVIO DE COMPROBANTES A SUNAT
         if (esComprobante && !esCredito) {
-            payload.comprobante.clientes.id = idCliente;
-            await this.comprobanteService.enviarComprobanteSunat(payload.comprobante, payload.localId);
+            comprobante.clientes.id = idCliente;
+            await this.comprobanteService.enviarComprobanteSunat(comprobante, payload.localId);
         }
 
         return payload;
@@ -401,37 +403,38 @@ export class VentasService {
 
     async cambiarVentaCredito(id:number, payload:any){ 
 
-        let newTipoVenta = "";
+        let idVenta = 0;
+
         const venta:any = await this.ventasRepo.findOne(id, { 
             relations: ["ventaDetalles", "ventaDetalles.productos"] 
         });
 
-        // convertir a VENTA RAPIDA
-        venta.tipo_venta = payload.tipo_venta;
-        const resto:any = await this.ventasRepo.save(venta);
-        newTipoVenta = resto.tipo_venta;
-
-        // convertir a BOLETA
-
-
-        // convertir a FACTURA
-
+        if (payload.tipo_venta === tipoVenta.venta_rapida) {
+            // convertir a VENTA RAPIDA
+            venta.tipo_venta = payload.tipo_venta;
+            await this.ventasRepo.save(venta);
+            idVenta = venta.id;
+        } else if (payload.tipo_venta === tipoVenta.boleta || payload.tipo_venta === tipoVenta.factura) {
+            // convertir a COMPROBANTE
+            const comprobante:any = await this.cambiarTipoComp(id, payload);
+            idVenta = comprobante.data.id;
+        }
 
         // añadir ganancias a ingresosVentas
         await this.ventasProviderService.addIngresosVenta(venta);
 
         return {
             success: true,
-            id: venta.id,
-            tipo_venta: newTipoVenta
-        };    
+            id: idVenta,
+            tipo_venta: payload.tipo_venta
+        };
     }
 
 
     async cambiarTipoComp(id:number, payload:any){
 
         const venta:any = await this.ventasRepo.findOne(id, { relations: ["ventaDetalles", "ventaDetalles.productos", "locales"] });
-        venta.tipo_venta = payload.tipoComprobante;
+        venta.tipo_venta = payload.tipo_venta;
         venta.igvGeneral = Number(venta.total) - Number(venta.total / this.IGV);
         venta.clientes = payload.cliente;
         venta.subtotal = venta.total - venta.igvGeneral;
@@ -443,7 +446,7 @@ export class VentasService {
         // actualizar venta
         const updateVenta:any = {
             id: venta.id,
-            tipo_venta: payload.tipoComprobante,
+            tipo_venta: payload.tipo_venta,
             clientes: idCliente
         }
         await this.ventasRepo.save(updateVenta);

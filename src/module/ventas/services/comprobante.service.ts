@@ -164,7 +164,8 @@ export class ComprobanteService {
         comprobante.total = Number(payload.total).toFixed(5);
 
         // cliente
-        if (!!payload.clientes.numero_documento) {
+        if (!!payload.clientes.numero_documento || payload.tipo_venta === tipoVenta.factura) {
+        // if (!!payload.clientes.numero_documento) {
             comprobante.cliente = payload.clientes;
             // payload.clientes.razonSocial = !!(payload.clientes.razonSocial) ? payload.clientes.razonSocial : payload.clientes.nombre;
             if (payload.tipo_venta === tipoVenta.boleta) {
@@ -222,7 +223,7 @@ export class ComprobanteService {
         ) {
             const titulo:string = response.estado === estados_comprobante.Error_envio 
             ? "Error en envio de comprobante nro: " + newComprobante.data.id
-            : "Comprobante enviado rechazado nro: " + newComprobante.data.id
+            : "Comprobante rechazado nro: " + newComprobante.data.id
             await this.ticketsService.create({
                 titulo: titulo,
                 descripcion: response.msgErr,
