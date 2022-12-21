@@ -345,8 +345,10 @@ export class VentasService {
         let newCreditoDetalles:Array<any> = [];
 
         // gestion cliente
-        comprobante.clientes = payload.cliente;
-        idCliente = await this.clientesService.nuevoClienteId(payload.cliente);
+        if (esComprobante) {
+            comprobante.clientes = payload.cliente;
+            idCliente = await this.clientesService.nuevoClienteId(payload.cliente);
+        }
 
         // busqueda de venta y añadir cliente a venta
         const venta:any = await this.ventasRepo.findOne(id, { relations: ["ventaDetalles", "ventaDetalles.productos", "locales"] });
