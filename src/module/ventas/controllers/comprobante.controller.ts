@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, DefaultValuePipe, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, DefaultValuePipe, Query, Res } from '@nestjs/common';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { Comprobante } from '../entities/comprobante.entity';
 import { ComprobanteService } from '../services/comprobante.service';
@@ -43,6 +43,15 @@ export class ComprobanteController {
     @Post('reenviar')
     postReenviar(@Body() payload:any){
         return this.comprobanteService.reenviarComprobante(payload);
+    }
+
+    @Get('reporte/download/:inicio/:fin')
+    downloadReporte(
+        @Param('inicio') inicio:string,
+        @Param('fin') fin:string,
+        @Res() res:any,
+    ){    
+        return this.comprobanteService.downloadReporteComprobFechas(res, inicio, fin);
     }
 
     // @Post('anular')

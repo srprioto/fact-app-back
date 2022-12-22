@@ -56,6 +56,27 @@ export const fechaInicioFinMes = () => {
     ];
 }
 
+
+export const fechaInicioFinMesPasado = () => { 
+    const inicio:any = DateTime
+        .now()
+        .setZone('America/Lima')
+        .startOf('month')
+        .minus({month: 1})
+        .toISO();
+    const fin:any = DateTime
+        .now()
+        .setZone('America/Lima')
+        .endOf('month')
+        .minus({month: 1})
+        .toISO();
+    return [
+        inicio,
+        fin
+    ];
+}
+
+
 export const fechaHaceUnaSemana = () => { 
     return DateTime
         .now()

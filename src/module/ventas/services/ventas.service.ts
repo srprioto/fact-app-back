@@ -18,7 +18,6 @@ import { CreditoDetallesService } from './credito-detalles.service';
 import { LocalesStockService } from 'src/module/locales/services/locales-stock.service';
 import { ahora, fechaHaceUnaSemana, fechaNoHora, fechasHaceDias, inicioDia } from 'src/assets/functions/fechas';
 
-
 var xl = require('excel4node');
 
 
@@ -529,7 +528,7 @@ export class VentasService {
     }
 
 
-    async ventaEntreFechas(){ // establecer como parametros las fechas de inicio y fin recibidos desde el frontend
+    async ventaEnt1reFechas(){ // establecer como parametros las fechas de inicio y fin recibidos desde el frontend
         const data:any = await this.ventasRepo.find({
             relations: ["clientes", "usuarios", "ventaDetalles", "ventaDetalles.productos", "locales"],
             order: { id: "DESC" }
@@ -545,7 +544,10 @@ export class VentasService {
         const wb = new xl.Workbook();
         const ws = wb.addWorksheet("reporte_ventas");
 
-        const datos:any = await this.ventaEntreFechas()
+        const datos:any = await this.ventasRepo.find({
+            relations: ["clientes", "usuarios", "ventaDetalles", "ventaDetalles.productos", "locales"],
+            order: { id: "DESC" }
+        });
         
         let exportar:Array<any> = [];
 
@@ -572,13 +574,13 @@ export class VentasService {
                 dataUpdate.direccion_local = e.locales.direccion.toString();
             }
 
-            if (e.clientes) {
-                dataUpdate.codigo_venta_reg = e.clientes.nombre.toString();
-                dataUpdate.direccion_cliente_reg = e.clientes.direccion.toString();
-                dataUpdate.telefono_cliente_reg = e.clientes.telefono.toString();
-                dataUpdate.documento_cliente_reg = e.clientes.documento.toString();
-                dataUpdate.email_cliente_reg = e.clientes.email.toString();
-            }
+            // if (e.clientes) {
+            //     dataUpdate.codigo_venta_reg = e.clientes.nombre.toString();
+            //     dataUpdate.direccion_cliente_reg = e.clientes.direccion.toString();
+            //     dataUpdate.telefono_cliente_reg = e.clientes.telefono.toString();
+            //     dataUpdate.documento_cliente_reg = e.clientes.documento.toString();
+            //     dataUpdate.email_cliente_reg = e.clientes.email.toString();
+            // }
 
             exportar.push(dataUpdate);
         });
@@ -618,6 +620,7 @@ export class VentasService {
         });
 
         return wb.write('reporteVentas.xlsx', res);
+
 
     }
 

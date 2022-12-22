@@ -9,10 +9,12 @@ import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginat
 // import { Caja } from 'src/module/locales/entities/caja.entity';
 import { CorrelativoService } from './correlativo.service';
 import { tipoVenta } from '../dtos/ventas.dto';
-import { ahora } from 'src/assets/functions/fechas';
+import { ahora, fechaInicioFinMesPasado, fechaNoHora } from 'src/assets/functions/fechas';
 import { TicketsService } from 'src/module/locales/services/tickets.service';
 import { estados_comprobante } from '../dtos/comprobante.dto';
 // import { CajaService } from 'src/module/locales/services/caja.service';
+
+var xl = require('excel4node');
 
 @Injectable()
 export class ComprobanteService {
@@ -457,6 +459,84 @@ export class ComprobanteService {
         }
 
         return response;
+
+    }
+
+
+    // otros
+    async downloadReporteComprobFechas(res:any, inicio:string, fin:string){
+
+        const wb = new xl.Workbook();
+        const ws = wb.addWorksheet("reporte_ventas");
+
+        const where:any = {};
+
+        if (inicio === "_" || fin === "_" ) {
+            const [ inicioMesPasado, finMesPasado ] = fechaInicioFinMesPasado();
+            where.updated_at = Between(inicioMesPasado, finMesPasado);
+        } else {
+            where.updated_at = Between(inicio, fin);
+        }
+
+        const comprobantes:any = await this.comprobanteRepo.find({
+            relations: ["clientes"],
+            select: ["fecha_emision", "tipoComprobante", "serie", "tipoDocumento", "correlativo", "subtotal", "igvGeneral", "total"],
+            order: { id: "DESC" },
+            where: where
+        });
+
+        const exportar:Array<any> = [];
+
+        comprobantes.forEach((e:any) => {
+            let dataUpdate:any = e;
+            dataUpdate.ruc = this.verificacion.documento;
+            dataUpdate.correlativo = String(e.correlativo);
+            dataUpdate.fecha_venta = fechaNoHora(e.fecha_emision);
+            dataUpdate.fecha_vencimiento = fechaNoHora(e.fecha_emision);
+            dataUpdate.nombre = "";
+            dataUpdate.razonSocial = "";
+            dataUpdate.numero_documento = "";
+            if (e.clientes) {
+                dataUpdate.nombre = e.clientes.nombre
+                dataUpdate.razonSocial = e.clientes.razonSocial
+                dataUpdate.numero_documento = e.clientes.numero_documento
+            }
+            delete dataUpdate.fecha_emision;
+            delete dataUpdate.clientes
+            exportar.push(dataUpdate);
+        });
+
+        const titlesColumns = [ 
+            "Serie",
+            "Numero",
+            "Tipo comprobante",
+            "Tipo documento",
+            "Subtotal",
+            "IGV",
+            "Total",
+            "Ruc",
+            "Fecha venta",
+            "Fecha vencimiento",
+            "Nombre",
+            "Razon social",
+            "Numero documento"
+        ];
+
+        let handlerColumnIndex = 1; // añadir nombres de las columnas
+        titlesColumns.forEach(element => {
+            ws.cell(1, handlerColumnIndex++).string(element)
+        });
+
+        let rowIndex = 2;
+        exportar.forEach((record) => { 
+            let columnIndex = 1;
+            Object.keys(record).forEach((columnName) => { 
+                ws.cell(rowIndex, columnIndex++).string(record[columnName])
+            })
+            rowIndex++;
+        });
+
+        return wb.write('reporteContable.xlsx', res);
 
     }
 
