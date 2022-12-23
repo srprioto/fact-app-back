@@ -262,29 +262,3 @@ export class VentasReportesService {
 
 }
 
-
-// const query = await consulta(`
-//     select IF(sum(ganancia) = null, 0, sum(ganancia)) as Ganancias_dia, DATE_FORMAT(created_at, "%d/%m/%Y")  as "Fecha"
-//     from ingresos_ventas 
-//     where created_at BETWEEN '` + startMonth + `' AND  '` + endMonth + `'
-//     group by Fecha
-// `);
-
-// SELECT 
-//     sum(ingresos_ventas.ganancia) as Ganancias_dia, 
-//     DATE_FORMAT(ingresos_ventas.created_at, "%d/%m/%Y")  as "Fecha"
-// FROM ingresos_ventas, ventas
-// WHERE 
-//     (ingresos_ventas.created_at BETWEEN "2022-11-01T00:00:00.000-05:00" AND "2022-11-30T23:59:59.999-05:00") AND
-//     ingresos_ventas.ventasId = ventas.id
-// GROUP BY Fecha
-// ORDER BY Fecha desc
-// LIMIT 50
-
-// ${
-//     (idLocal === "_" && idLocal !== "No")
-//     ? ""
-//     : (idLocal === "No" && idLocal !== "_")
-//     ? "AND ingresos_egresos.localesId IS NULL"
-//     : `AND ingresos_egresos.localesId = ${idLocal}`
-// }
