@@ -40,4 +40,9 @@ export class VentasReportesController {
         return this.ventasReportesService.gananciasReporteDia(payload);
     }
 
+    @Get('top_productos_vendidos')
+    getTopProductosVendidos(){
+        return this.ventasReportesService.topProductosVendidos();
+    }
+
 }

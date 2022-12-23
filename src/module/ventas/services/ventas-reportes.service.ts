@@ -8,6 +8,7 @@ import { tipoMovimiento } from 'src/module/locales/dtos/caja-detalles.dto';
 import { IngresosVentas } from '../entities/ingresos-ventas.entity';
 import { IngresosEgresos } from '../entities/ingresos_egresos.entity';
 import { CajaDetalles } from 'src/module/locales/entities/caja-detalles.entity';
+import { VentaDetalles } from '../entities/venta_detalles.entity';
 
 
 @Injectable()
@@ -15,8 +16,9 @@ export class VentasReportesService {
     
     constructor(
         @InjectRepository(IngresosVentas) private ingresosVentasRepo:Repository<IngresosVentas>,
+        @InjectRepository(VentaDetalles) private ventaDetallesRepo:Repository<VentaDetalles>,
         @InjectRepository(IngresosEgresos) private ingresosEgresosRepo:Repository<IngresosEgresos>,
-        @InjectRepository(CajaDetalles) private cajaDetallesRepo:Repository<CajaDetalles>
+        @InjectRepository(CajaDetalles) private cajaDetallesRepo:Repository<CajaDetalles>,
     ){}
 
 
@@ -250,6 +252,11 @@ export class VentasReportesService {
         `);
         const ganancia:number = !!query[0].ganancias_hoy ? Number(query[0].ganancias_hoy) : 0;
         return ganancia;
+    }
+
+
+    async topProductosVendidos(){
+
     }
     
 

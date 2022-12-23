@@ -368,7 +368,8 @@ export class ComprobanteService {
         // ticket de anulacion de facturas
         if (
             response.estado === estados_comprobante.Error_anulacion ||
-            response.estado === estados_comprobante.Anulacion_procesada
+            response.estado === estados_comprobante.Anulacion_procesada ||
+            response.estado === estados_comprobante.Rechazado
         ) {
             const titulo:string = response.estado === estados_comprobante.Error_anulacion
             ? "Error de anulacion en factura nro: " + comprobante.id
