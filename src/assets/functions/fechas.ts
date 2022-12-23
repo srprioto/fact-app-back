@@ -6,6 +6,24 @@ export const ahora = () => {
     return DateTime.now().setZone('America/Lima').toISO();
 }
 
+export const fecha = (fecha:any) => {
+    const newFecha:any = DateTime
+        .fromISO(fecha)
+        .setZone('UTC')
+        .setLocale('es')
+        .toFormat('dd LLL yyyy - HH:mm');
+    return newFecha
+}
+
+export const fechaCompletaActualJs = (fecha:any) => {
+    const newFecha:any = DateTime
+        .fromJSDate(fecha)
+        .setZone('UTC')
+        .setLocale('es')
+        .toFormat('dd LLL yyyy - HH:mm');
+    return newFecha
+}
+
 export const inicioDia = () => { 
     return DateTime
         .now()

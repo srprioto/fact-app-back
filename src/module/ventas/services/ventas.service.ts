@@ -16,7 +16,7 @@ import { CajaService } from 'src/module/locales/services/caja.service';
 import { VentasProviderService } from './ventas-provider.service';
 import { CreditoDetallesService } from './credito-detalles.service';
 import { LocalesStockService } from 'src/module/locales/services/locales-stock.service';
-import { ahora, fechaHaceUnaSemana, fechaNoHora, fechasHaceDias, inicioDia } from 'src/assets/functions/fechas';
+import { ahora, fechaCompletaActualJs, fechaHaceUnaSemana, fechaInicioFinMes, fechaNoHora, fechasHaceDias, inicioDia, inicioMes } from 'src/assets/functions/fechas';
 
 var xl = require('excel4node');
 
@@ -527,26 +527,26 @@ export class VentasService {
         }
     }
 
-
-    async ventaEnt1reFechas(){ // establecer como parametros las fechas de inicio y fin recibidos desde el frontend
-        const data:any = await this.ventasRepo.find({
-            relations: ["clientes", "usuarios", "ventaDetalles", "ventaDetalles.productos", "locales"],
-            order: { id: "DESC" }
-        });
-
-        return data;
-    }
-
     
     // descargar reporte de ventas
-    async downloadReporteVentas(res:any){
+    async downloadReporteVentas(res:any, inicio:string, fin:string){
 
         const wb = new xl.Workbook();
         const ws = wb.addWorksheet("reporte_ventas");
 
+        const where:any = { estado_venta: "listo" };
+
+        if (inicio === "_" || fin === "_" ) {
+            const [ inicioMesPasado, finMesPasado ] = fechaInicioFinMes();
+            where.updated_at = Between(inicioMesPasado, finMesPasado);
+        } else {
+            where.updated_at = Between(inicio, fin);
+        }
+
         const datos:any = await this.ventasRepo.find({
-            relations: ["clientes", "usuarios", "ventaDetalles", "ventaDetalles.productos", "locales"],
-            order: { id: "DESC" }
+            relations: ["clientes", "usuarios", "locales"],
+            order: { id: "DESC" },
+            where: where
         });
         
         let exportar:Array<any> = [];
@@ -555,54 +555,48 @@ export class VentasService {
             
             let dataUpdate:any = {};
 
-            dataUpdate.id = e.id.toString();
+            dataUpdate.codigo_venta = e.id.toString() + "-" + e.codigo_venta.toString();
             dataUpdate.total = e.total.toString();
             dataUpdate.subtotal = e.subtotal.toString();
-            dataUpdate.observaciones = e.observaciones.toString();
             dataUpdate.descuento_total = e.descuento_total.toString();
-            dataUpdate.codigo_venta = e.codigo_venta.toString();
             dataUpdate.estado_venta = e.estado_venta.toString();
-            dataUpdate.fecha_creacion = e.created_at.toString();
+            dataUpdate.forma_pago = e.forma_pago.toString();
+            dataUpdate.fecha_venta = fechaCompletaActualJs(e.created_at);
+
+            dataUpdate.nombre_vendedor = "";
+            dataUpdate.nombre_local = "";
+            dataUpdate.cliente_nombre = "";
+            dataUpdate.cliente_razonSocial = "";
+            dataUpdate.cliente_documento = "";
 
             if (e.usuarios) {
                 dataUpdate.nombre_vendedor = e.usuarios.nombre.toString();
-                dataUpdate.documento_vendedor = e.usuarios.documento.toString();
             }
-            
             if (e.locales) {
                 dataUpdate.nombre_local = e.locales.nombre.toString();
-                dataUpdate.direccion_local = e.locales.direccion.toString();
             }
-
-            // if (e.clientes) {
-            //     dataUpdate.codigo_venta_reg = e.clientes.nombre.toString();
-            //     dataUpdate.direccion_cliente_reg = e.clientes.direccion.toString();
-            //     dataUpdate.telefono_cliente_reg = e.clientes.telefono.toString();
-            //     dataUpdate.documento_cliente_reg = e.clientes.documento.toString();
-            //     dataUpdate.email_cliente_reg = e.clientes.email.toString();
-            // }
-
+            if (e.clientes) {
+                dataUpdate.cliente_nombre = e.clientes.nombre.toString();
+                dataUpdate.cliente_razonSocial = e.clientes.razonSocial.toString();
+                dataUpdate.cliente_documento = e.clientes.numero_documento.toString();
+            }
+            
             exportar.push(dataUpdate);
         });
 
         const titlesColumns = [ // nombres de las columnas
-            "id",
-            "total",
-            "subtotal",
-            "observaciones",
-            "descuento_total",
-            "codigo_venta",
-            "estado_venta",
-            "fecha_creacion",
-            "nombre_vendedor",
-            "documento_vendedor",
-            "nombre_local",
-            "direccion_local",
-            "codigo_venta_reg",
-            "direccion_cliente_reg",
-            "telefono_cliente_reg",
-            "documento_cliente_reg",
-            "email_cliente_reg"
+            "Codigo venta",
+            "Total",
+            "Subtotal",
+            "Descuento total",
+            "Estado venta",
+            "Forma de pago",
+            "Fecha venta",
+            "Nombre vendedor",
+            "Nombre local",
+            "Nombre cliente",
+            "RazonSocial cliente",
+            "Documento cliente"
         ];
 
         let handlerColumnIndex = 1; // añadir nombres de las columnas
@@ -620,7 +614,6 @@ export class VentasService {
         });
 
         return wb.write('reporteVentas.xlsx', res);
-
 
     }
 

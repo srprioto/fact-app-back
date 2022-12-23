@@ -100,9 +100,13 @@ export class VentasController {
     }
 
     // reportes
-    @Get('reporte/download')
-    downloadReporte(@Res() res){
-        return this.ventasService.downloadReporteVentas(res);
+    @Get('reporte/download/:inicio/:fin')
+    downloadReporte(        
+        @Param('inicio') inicio:string,
+        @Param('fin') fin:string,
+        @Res() res:any
+    ) {
+        return this.ventasService.downloadReporteVentas(res, inicio, fin);
     }
 
     @Get('reporte/estadisticas')
