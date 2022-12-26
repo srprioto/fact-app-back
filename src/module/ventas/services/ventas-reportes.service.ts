@@ -9,6 +9,8 @@ import { IngresosVentas } from '../entities/ingresos-ventas.entity';
 import { IngresosEgresos } from '../entities/ingresos_egresos.entity';
 import { CajaDetalles } from 'src/module/locales/entities/caja-detalles.entity';
 import { VentaDetalles } from '../entities/venta_detalles.entity';
+import { paginacionQuery } from 'src/assets/functions/paginacion';
+// import { paginacionQuery } from 'src/assets/functions/paginacion';
 
 
 @Injectable()
@@ -255,9 +257,97 @@ export class VentasReportesService {
     }
 
 
-    async topProductosVendidos(){
+    async topProductosVendidos(payload:any){
+
+        const query:string = `
+            SELECT
+                Sum(venta_detalles.cantidad_venta) as cantidad_venta,
+                productos.codigo as codigo,
+                productos.nombre as nombre,
+                productos.marca as marca,
+                productos.color as color,
+                productos.talla as talla
+            FROM productos
+            INNER JOIN venta_detalles
+            ON venta_detalles.productosId = productos.id
+            group by codigo, nombre, marca, color, talla
+            ORDER BY cantidad_venta ${payload.ordenar}
+        `;
+
+        const queryTotalItems:string = `
+            SELECT COUNT(1) AS total
+            FROM (
+                SELECT sum(venta_detalles.cantidad_venta) as cantidad
+                FROM venta_detalles
+                group by productosId
+            ) AS UNO
+        `;
+
+        const paginate:any = await paginacionQuery(payload.pagina, query, queryTotalItems);
+
+        return paginate
 
     }
+
+
+
+
+    
+    // async topProductosVendidos(options:IPaginationOptions):Promise<any> {
+
+    //     const entityManager = getManager();
+
+    //     const queryBuilder:any = await entityManager.createQueryBuilder()
+    //         .select([
+    //         'SUM(ventaDetalles.cantidad_venta) as cantidadVenta',
+    //         'productos.codigo as codigo',
+    //         'productos.nombre as nombre',
+    //         'productos.marca as marca',
+    //         'productos.color as color',
+    //         'productos.talla as talla'
+    //     ])
+    //         .from(VentaDetalles, "ventaDetalles")
+    //         .innerJoin(Productos, "productos")
+    //         .where("ventaDetalles.productosId = productos.id")
+    //         .groupBy("codigo")
+    //         .addGroupBy("nombre")
+    //         .addGroupBy("marca")
+    //         .addGroupBy("color")
+    //         .addGroupBy("talla")
+    //         .orderBy('cantidadVenta', 'DESC')
+    //         .getRawMany()
+
+
+
+
+
+    //     // .orWhere("productos.id between 100 and 120")
+            
+
+    //     // const user = await createQueryBuilder("user")
+    //     //     .leftJoinAndSelect("user.photos", "photo")
+    //     //     .where("user.name = :name", { name: "Timber" })
+    //     //     .andWhere("photo.isRemoved = :isRemoved", { isRemoved: false })
+    //     //     .getOne()
+
+
+    //     // await entityManager
+    //     //     .createQueryBuilder(VentaDetalles, "ventaDetalles")
+    //     //     .select(['ventaDetalles.cantidad_venta as username', 'productos.nombre as orderTime'])
+    //     //     .innerJoin(Productos, "productos")
+    //     //     .getMany()
+
+
+    //     console.log(queryBuilder);
+    //     return queryBuilder;
+        
+
+    //     // const paginacion:any = await paginate<any>(queryBuilder, options);
+
+    //     // console.log(paginacion);        
+
+    //     // return paginacion;
+    // }
     
 
 }

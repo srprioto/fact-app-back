@@ -1,8 +1,11 @@
 import { 
     Body, 
     Controller, 
+    DefaultValuePipe, 
     Get, 
-    Post, 
+    ParseIntPipe, 
+    Post,
+    Query, 
     // Param, 
     // ParseIntPipe, 
     // Put, 
@@ -12,6 +15,7 @@ import {
     // DefaultValuePipe, 
     // Res 
 } from '@nestjs/common';
+import { Pagination } from 'nestjs-typeorm-paginate';
 // import { Pagination } from 'nestjs-typeorm-paginate';
 
 // import { AnularVentaDto, CreateVentasDto, UpdateVentasDto } from '../dtos/ventas.dto';
@@ -40,9 +44,24 @@ export class VentasReportesController {
         return this.ventasReportesService.gananciasReporteDia(payload);
     }
 
-    @Get('top_productos_vendidos')
-    getTopProductosVendidos(){
-        return this.ventasReportesService.topProductosVendidos();
+    @Post('top_productos_vendidos')
+    getTopProductosVendidos(@Body() payload:any){
+        return this.ventasReportesService.topProductosVendidos(payload);
     }
+
+
+    // @Get('top_productos_vendidos')
+    // async getPaginate(
+    //     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+    //     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+    // ): Promise<Pagination<any>> {
+    //     limit = limit > 100 ? 100 : limit;
+    //     return this.ventasReportesService.topProductosVendidos({
+    //         page,
+    //         limit,
+    //         route: '/ventas-reportes/top_productos_vendidos'
+    //     });
+    // }
+
 
 }
