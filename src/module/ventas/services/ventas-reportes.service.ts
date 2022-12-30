@@ -259,9 +259,23 @@ export class VentasReportesService {
 
     async topProductosVendidos(payload:any){
 
+        let where:string = "";
+
+        if (!!payload.searchText) {
+            where = `
+                WHERE
+                    productos.codigo LIKE "%${payload.searchText}%" ||
+                    productos.nombre LIKE "%${payload.searchText}%" ||
+                    productos.marca LIKE "%${payload.searchText}%" ||
+                    productos.color LIKE "%${payload.searchText}%" ||
+                    productos.talla LIKE "%${payload.searchText}%"
+            `;
+        }
+
         const query:string = `
             SELECT
                 Sum(venta_detalles.cantidad_venta) as cantidad_venta,
+                productos.id as id,
                 productos.codigo as codigo,
                 productos.nombre as nombre,
                 productos.marca as marca,
@@ -270,7 +284,8 @@ export class VentasReportesService {
             FROM productos
             INNER JOIN venta_detalles
             ON venta_detalles.productosId = productos.id
-            group by codigo, nombre, marca, color, talla
+            ${where}
+            group by id, codigo, nombre, marca, color, talla
             ORDER BY cantidad_venta ${payload.ordenar}
         `;
 
@@ -278,7 +293,10 @@ export class VentasReportesService {
             SELECT COUNT(1) AS total
             FROM (
                 SELECT sum(venta_detalles.cantidad_venta) as cantidad
-                FROM venta_detalles
+                FROM productos
+                INNER JOIN venta_detalles
+                ON venta_detalles.productosId = productos.id
+                ${where}
                 group by productosId
             ) AS UNO
         `;

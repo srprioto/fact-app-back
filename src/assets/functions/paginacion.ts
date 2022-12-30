@@ -1,13 +1,27 @@
 import { consulta } from "./queryBuilder";
 
-// es importante que el alias del conteo se llame total
+// IMPORTANTE:
+// el alias del conteo se llame total
+// la busquedas deben aplicarse al query de data y al de conteo total de registros
 
-export async function paginacionQuery(pagina:number, query:any, queryTotal:any, maximopp:number = 10) {
+export async function paginacionQuery(pagina:number, query:any, queryTotal?:any, maximopp:number = 10) {
     const offset:number = maximopp * (pagina - 1);
     const paginate:string = `LIMIT ${maximopp} OFFSET ${offset}`
-    const data:any = await consulta(query + paginate);
+    
+    let queryAddTotal:string = "";
 
-    const totalItems:number = Number((await consulta(queryTotal))[0].total); 
+    if (!queryTotal) {
+        queryAddTotal = `
+            SELECT COUNT(1) AS total
+            FROM ( ${ query } ) AS UNO
+        `;
+    } else {
+        queryAddTotal = queryTotal;
+    }
+
+    const data:any = await consulta(query + paginate);
+    const totalItems:number = Number((await consulta(queryAddTotal))[0].total);
+
     const totalPaginas:number = Math.ceil(totalItems / maximopp);
 
     return {
