@@ -8,7 +8,7 @@ import { tipoMovimiento } from 'src/module/locales/dtos/caja-detalles.dto';
 import { IngresosVentas } from '../entities/ingresos-ventas.entity';
 import { IngresosEgresos } from '../entities/ingresos_egresos.entity';
 import { CajaDetalles } from 'src/module/locales/entities/caja-detalles.entity';
-import { VentaDetalles } from '../entities/venta_detalles.entity';
+// import { VentaDetalles } from '../entities/venta_detalles.entity';
 import { paginacionQuery } from 'src/assets/functions/paginacion';
 // import { paginacionQuery } from 'src/assets/functions/paginacion';
 
@@ -18,7 +18,7 @@ export class VentasReportesService {
     
     constructor(
         @InjectRepository(IngresosVentas) private ingresosVentasRepo:Repository<IngresosVentas>,
-        @InjectRepository(VentaDetalles) private ventaDetallesRepo:Repository<VentaDetalles>,
+        // @InjectRepository(VentaDetalles) private ventaDetallesRepo:Repository<VentaDetalles>,
         @InjectRepository(IngresosEgresos) private ingresosEgresosRepo:Repository<IngresosEgresos>,
         @InjectRepository(CajaDetalles) private cajaDetallesRepo:Repository<CajaDetalles>,
     ){}
@@ -90,7 +90,8 @@ export class VentasReportesService {
 
         const queryGananciasVentas = await consulta(`
             SELECT 
-                sum(ingresos_ventas.ganancia) as Ganancias_dia, 
+                sum(ingresos_ventas.ganancia) as Ganancias_dia,
+                sum(ingresos_ventas.ganancia) as Solo_ganancias_dia,
                 DATE_FORMAT(ingresos_ventas.created_at, "%d/%m/%Y")  as "Dia"
             FROM ingresos_ventas, ventas
             WHERE
@@ -151,11 +152,12 @@ export class VentasReportesService {
 
         const resultados = sumaArrayObjRepetidos(unionQuerys, "Dia", "Ganancias_dia");
         const sumaGanancias = sumaArrayObj(resultados, "Ganancias_dia");
+        const gananciasVentas = sumaArrayObj(resultados, "Solo_ganancias_dia");
 
         return {
             query: resultados,
             sumaMontos: {
-                // sumaIngresos,
+                gananciasVentas,
                 ingresosEgresosGenerales,
                 sumaGanancias
             }
