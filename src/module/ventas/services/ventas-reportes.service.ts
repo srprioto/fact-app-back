@@ -258,18 +258,31 @@ export class VentasReportesService {
 
 
     async topProductosVendidos(payload:any){
-
+        
+        const filtro:boolean = (!!payload.searchText) || payload.local !== "_";
+        let innerJoin:string = "";
         let where:string = "";
+        
 
-        if (!!payload.searchText) {
-            where = `
-                WHERE
+        if (filtro) {
+            where = `WHERE `; // inicia con where para concatenar
+            if (payload.local !== "_") { // verifica que el local sea general o no
+                innerJoin += `INNER JOIN ventas ON venta_detalles.ventasId = ventas.id`;
+                where += ` ventas.localesId = ${payload.local}`;
+            }
+            if (!!payload.searchText) { // verifica que exista una busqueda
+                if (payload.local !== "_") {
+                    where += ` AND `; // para unir el where de locales con busquedas
+                }
+                // busqueda de producto
+                where += `(
                     productos.codigo LIKE "%${payload.searchText}%" ||
                     productos.nombre LIKE "%${payload.searchText}%" ||
                     productos.marca LIKE "%${payload.searchText}%" ||
                     productos.color LIKE "%${payload.searchText}%" ||
                     productos.talla LIKE "%${payload.searchText}%"
-            `;
+                )`;
+            }
         }
 
         const query:string = `
@@ -282,10 +295,10 @@ export class VentasReportesService {
                 productos.color as color,
                 productos.talla as talla
             FROM productos
-            INNER JOIN venta_detalles
-            ON venta_detalles.productosId = productos.id
+            INNER JOIN venta_detalles ON productos.id = venta_detalles.productosId
+            ${innerJoin}
             ${where}
-            group by id, codigo, nombre, marca, color, talla
+            GROUP BY id, codigo, nombre, marca, color, talla
             ORDER BY cantidad_venta ${payload.ordenar}
         `;
 
@@ -296,18 +309,69 @@ export class VentasReportesService {
                 FROM productos
                 INNER JOIN venta_detalles
                 ON venta_detalles.productosId = productos.id
+                ${innerJoin}
                 ${where}
                 group by productosId
             ) AS UNO
         `;
 
-        const paginate:any = await paginacionQuery(payload.pagina, query, queryTotalItems);
-
-        return paginate
+        return await paginacionQuery(payload.pagina, query, queryTotalItems);
 
     }
 
 
+    async topProductosSinVentas(payload:any){
+
+        let where:string = "";
+
+        if (!!payload.searchText) {
+            where = `
+                AND 
+                    productos.codigo LIKE "%${payload.searchText}%" ||
+                    productos.nombre LIKE "%${payload.searchText}%" ||
+                    productos.marca LIKE "%${payload.searchText}%" ||
+                    productos.color LIKE "%${payload.searchText}%" ||
+                    productos.talla LIKE "%${payload.searchText}%"
+            `;
+        }
+
+        const query:string = `
+            SELECT 
+                productos.id as id,
+                productos.codigo as codigo,
+                productos.nombre as nombre,
+                productos.marca as marca,
+                productos.color as color,
+                productos.talla as talla
+            FROM productos
+            WHERE id not in (
+                SELECT productosId 
+                FROM venta_detalles
+            )
+            ${where}
+        `;
+
+        return await paginacionQuery(payload.pagina, query);
+
+    }
+
+
+    
+    // SELECT
+    //     Sum(venta_detalles.cantidad_venta) as cantidad_venta,
+    //     productos.codigo as codigo,
+    //     productos.nombre as nombre,
+    //     productos.marca as marca,
+    //     productos.color as color,
+    //     productos.talla as talla
+    // FROM productos 
+    //     INNER JOIN venta_detalles ON productos.id = venta_detalles.productosId
+    //     INNER JOIN ventas ON venta_detalles.ventasId = ventas.id
+    // WHERE
+    //     ventas.localesId = 3
+    // group by 
+    //     codigo, nombre, marca, color, talla
+    // ORDER BY cantidad_venta desc
 
 
     

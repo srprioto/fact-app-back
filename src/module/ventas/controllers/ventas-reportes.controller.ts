@@ -49,6 +49,11 @@ export class VentasReportesController {
         return this.ventasReportesService.topProductosVendidos(payload);
     }
 
+    @Post('top_productos_sin_ventas')
+    getTopProductosSinVent(@Body() payload:any){
+        return this.ventasReportesService.topProductosSinVentas(payload);
+    }
+
 
     // @Get('top_productos_vendidos')
     // async getPaginate(

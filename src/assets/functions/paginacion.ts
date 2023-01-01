@@ -6,7 +6,7 @@ import { consulta } from "./queryBuilder";
 
 export async function paginacionQuery(pagina:number, query:any, queryTotal?:any, maximopp:number = 10) {
     const offset:number = maximopp * (pagina - 1);
-    const paginate:string = `LIMIT ${maximopp} OFFSET ${offset}`
+    const paginate:string = ` LIMIT ${maximopp} OFFSET ${offset}`
     
     let queryAddTotal:string = "";
 
