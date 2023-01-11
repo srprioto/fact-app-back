@@ -344,7 +344,7 @@ export class VentasService {
         let newCreditoDetalles:Array<any> = [];
 
         // gestion cliente
-        if (esComprobante) {
+        if (esComprobante || esCredito) {
             comprobante.clientes = payload.cliente;
             idCliente = await this.clientesService.nuevoClienteId(payload.cliente);
         }
