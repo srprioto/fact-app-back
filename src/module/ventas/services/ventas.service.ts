@@ -17,6 +17,7 @@ import { VentasProviderService } from './ventas-provider.service';
 import { CreditoDetallesService } from './credito-detalles.service';
 import { LocalesStockService } from 'src/module/locales/services/locales-stock.service';
 import { ahora, fechaCompletaActualJs, fechaHaceUnaSemana, fechaInicioFinMes, fechaNoHora, fechasHaceDias, inicioDia, inicioMes } from 'src/assets/functions/fechas';
+import { estados_comprobante } from '../dtos/comprobante.dto';
 
 var xl = require('excel4node');
 
@@ -402,7 +403,7 @@ export class VentasService {
     }
 
 
-    async cambiarVentaCredito(id:number, payload:any){ 
+    async cambiarVentaCredito(id:number, payload:any){
 
         let idVenta = 0;
 
@@ -467,6 +468,7 @@ export class VentasService {
         const comprobante:any = venta.comprobante.length > 0 ? venta.comprobante[0] : {}
         const locales:any = venta.locales ? venta.locales : {};
         const esCredito:boolean = (venta.tipo_venta === tipoVenta.credito || venta.tipo_venta === tipoVenta.adelanto);
+        let estadoAnul:string = "";
 
         // const caja2:any = await this.cajaRepo.findOne({
         //     relations: ["locales"],
@@ -474,35 +476,44 @@ export class VentasService {
         // });
 
         const caja:any = await this.cajaService.cajaIngresos(locales.caja_actual);
-        const montoCaja:number = Number(caja.monto_apertura) + Number(caja.monto_efectivo) + Number(caja.otros_montos);
+        const montoCaja:number = Number(caja.monto_apertura) + Number(caja.monto_efectivo);
 
         if (montoCaja < Number(venta.total)) {
             // si caja no tiene cantidad de dinero adecuada
-            return true;
+            return {
+                sinFondos: true,
+                estado: "sin fondos"
+            };
         } else {
             // aqui añadimos la anulacion de venta
             if (venta.tipo_venta === tipoVenta.venta_rapida || esCredito) {
                 // anulacion de venta normal                
                 await this.ventasProviderService.anulacionVenta(idVenta, payload.notaBaja, payload.usuarioId, caja.id);
+                estadoAnul = estados_comprobante.Anulado
             } else {
                 // anulacion de comprobante
                 if (venta.tipo_venta === tipoVenta.factura) {
-                    // anular factura                    
+                    // anular factura
                     const response:any = await this.comprobanteService.anularFactura(comprobante, payload, locales.id);
-                    if (response.estado === "Anulado" || response.estado === "Anulacion procesada"){
+                    if (response.estado === estados_comprobante.Anulado || response.estado === estados_comprobante.Anulacion_procesada){
                         // anular venta
                         await this.ventasProviderService.anulacionVenta(idVenta, payload.notaBaja, payload.usuarioId, caja.id);
                     }
+                    estadoAnul = response.estado
                 } else if (venta.tipo_venta === tipoVenta.boleta) {
                     // // anular boleta
                     const response:any = await this.comprobanteService.anularBoleta(comprobante.id, payload);
-                    if (response.estado === "Anulado" || response.estado === "Anulacion procesada") {
+                    if (response.estado === estados_comprobante.Anulado || response.estado === estados_comprobante.Anulacion_procesada) {
                         // anular venta
-                        await this.ventasProviderService.anulacionVenta(idVenta, payload.notaBaja, payload.usuarioId, caja.id);    
+                        await this.ventasProviderService.anulacionVenta(idVenta, payload.notaBaja, payload.usuarioId, caja.id);
                     }
+                    estadoAnul = response.estado
                 }               
             }
-            return false;
+            return {
+                sinFondos: false,
+                estado: estadoAnul
+            };
         }
 
     }
