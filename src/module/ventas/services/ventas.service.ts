@@ -239,15 +239,14 @@ export class VentasService {
     async crearVenta(payload:any){ // crear una venta
 
         // buscar caja
+        const where:any = {
+            locales: {
+                id: payload.localId, tipo_local: "tienda"
+            },  estado_caja: true
+        }
         const caja:any = await this.cajaRepo.findOne({
             relations: ["locales"],
-            where: {
-                locales: {
-                    id: payload.localId,
-                    tipo_local: "tienda"
-                }, 
-                estado_caja: true
-            }
+            where: where
         })
 
         if (caja) {
