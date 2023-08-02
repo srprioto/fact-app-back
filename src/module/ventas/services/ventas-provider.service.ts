@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 // import { CajaService } from 'src/module/locales/services/caja.service';
 import { Ventas } from '../entities/ventas.entity';
 // import { Caja } from 'src/module/locales/entities/caja.entity';
@@ -11,6 +11,7 @@ import { CajaDetallesService } from 'src/module/locales/services/caja-detalles.s
 import { tipoMovimiento } from 'src/module/locales/dtos/caja-detalles.dto';
 import { IngresosVentas } from '../entities/ingresos-ventas.entity';
 import { LocalesStockService } from 'src/module/locales/services/locales-stock.service';
+import { paginacionOrm } from 'src/assets/functions/paginacion';
 
 @Injectable()
 export class VentasProviderService {
@@ -100,6 +101,56 @@ export class VentasProviderService {
         await this.ingresosVentasRepo.save(ingresosVentas);
 
     }
+
+
+    async ventasDelUsuario(id:number){
+        const data:any = await this.ventasRepo.find({
+            relations: ["ventaDetalles", "ventaDetalles.productos"],
+            where: {usuarios: id}
+        });
+
+        return {
+            success: "informacion correcta",
+            data: data
+        }
+    }
+
+    async ventasUsuarioPaginate(payload:any, id:number){
+
+        const data:any = await this.ventasRepo.find({
+            relations: ["ventaDetalles", "ventaDetalles.productos"],
+            where: {usuarios: id}
+        });
+
+
+        // busquedas
+        // let where:any = [];
+        // if (!!payload.searchText) {
+        //     where = [
+        //         { nombre: Like(`%${payload.searchText}%`), tipo: "personal" },
+        //         { documento: Like(`%${payload.searchText}%`), tipo: "personal" }
+        //     ]
+        // } else {
+        //     where = { tipo: "personal" };
+        // }
+
+        const resto:any = paginacionOrm(this.ventasRepo, {
+            relations: ["ventaDetalles", "ventaDetalles.productos"],
+            where: {usuarios: id},
+            pagina: payload.pagina,
+        });
+
+        return resto;
+
+
+        // return {
+        //     payload,
+        //     success: "ok",
+        //     data: data,
+        // }
+
+    }
+
 
 
 }

@@ -17,13 +17,15 @@ import { Pagination } from 'nestjs-typeorm-paginate';
 import { AnularVentaDto, CreateVentasDto, UpdateVentasDto } from '../dtos/ventas.dto';
 import { Ventas } from '../entities/ventas.entity';
 import { VentasService } from '../services/ventas.service';
+import { VentasProviderService } from '../services/ventas-provider.service';
 
 
 @Controller('ventas')
 export class VentasController {
 
     constructor(
-        private ventasService:VentasService
+        private ventasService:VentasService,
+        private ventasProviderService:VentasProviderService,
     ){}
 
     @Get("paginate/:value/:idLocal/:inicio/:fin")
@@ -98,6 +100,18 @@ export class VentasController {
     habilitarVenta(@Param('id', ParseIntPipe) id:number, @Body() payload:any){
         return this.ventasService.habilitarVenta(id, payload);
     }
+
+    @Get('usuario_ventas/:id')
+    getVentasDelUsuario(@Param('id', ParseIntPipe) id:number){
+        return this.ventasProviderService.ventasDelUsuario(id);
+    }
+
+    @Post('usuario/paginate/:id')
+    postVentasUsuarioPaginate(@Body() payload:any, @Param('id') id:number){
+        return this.ventasProviderService.ventasUsuarioPaginate(payload, id);
+    }
+
+
 
     // reportes
     @Get('reporte/download/:inicio/:fin')
