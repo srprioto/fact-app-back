@@ -122,7 +122,6 @@ export class VentasProviderService {
             where: {usuarios: id}
         });
 
-
         // busquedas
         // let where:any = [];
         // if (!!payload.searchText) {
@@ -141,13 +140,6 @@ export class VentasProviderService {
         });
 
         return resto;
-
-
-        // return {
-        //     payload,
-        //     success: "ok",
-        //     data: data,
-        // }
 
     }
 
