@@ -137,9 +137,12 @@ export class ClientesService {
 
 
     async clientesExternos(payload:any){
-
+        
         const { documento, tipoDocumento } = payload;
         let response:clienteDto = {...cliente};
+
+        const pedirDNI:string = 'https://ww1.sunat.gob.pe/ol-ti-itatencionf5030/registro/solicitante?tipDocu=1&numDocu=' + documento + '&tipPers=""'
+        const pedirRUC:string = 'https://incared.com/api/apirest'
 
         const clienteExistente:clienteDto = await this.clientesRepo.findOne({
             tipoDocumento: tipoDocumento,
@@ -154,10 +157,10 @@ export class ClientesService {
         } else {
             switch (tipoDocumento) {
                 case "DNI":
-                    const urlDNI:string = process.env.PEDIR_DNI + documento
+                    // const urlDNI:string = pedirDNI
                     let responseDNI:any;
                     try {
-                        responseDNI = await axios.post(urlDNI);
+                        responseDNI = await axios.post(pedirDNI);
                         responseDNI = responseDNI.data;
                     } catch (error) {
                         console.log(error);
@@ -175,11 +178,11 @@ export class ClientesService {
                     break;
 
                 case "RUC":
-                    const urlRUC:string = process.env.PEDIR_RUC;
+                    // const urlRUC:string = process.env.PEDIR_RUC;
                     let responseRUC:any;
 
                     try {
-                        responseRUC = await axios.post(urlRUC, { action: "getnumero", numero: documento.toString() });
+                        responseRUC = await axios.post(pedirRUC, { action: "getnumero", numero: documento.toString() });
                         responseRUC = responseRUC.data;
                     } catch (error) {
                         console.log(error);
