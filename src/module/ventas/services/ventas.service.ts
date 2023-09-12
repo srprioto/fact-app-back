@@ -238,6 +238,7 @@ export class VentasService {
 
     async crearVenta(payload:any){ // crear una venta
 
+        
         // buscar caja
         const where:any = {
             locales: {
