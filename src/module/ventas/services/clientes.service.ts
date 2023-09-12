@@ -2,11 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import axios from 'axios';
-
 import { cliente, clienteDto, CreateClienteDto, UpdateClienteDto } from '../dtos/clientes.dto';
 import { Clientes } from '../entities/clientes.entity';
-
 import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
+
 
 @Injectable()
 export class ClientesService {
@@ -15,6 +14,7 @@ export class ClientesService {
         @InjectRepository(Clientes) private clientesRepo:Repository<Clientes>
     ){ }
 
+    
     async getAll(){
         const data = await this.clientesRepo.find();
 
@@ -25,11 +25,13 @@ export class ClientesService {
 
     }
 
+
     async paginate(options: IPaginationOptions): Promise<Pagination<Clientes>> {
         return paginate<Clientes>(this.clientesRepo, options, {
             order: { id: "DESC" }
         });
     }
+
 
     async getOne(id:number){
         const data = await this.clientesRepo.findOne(id);
@@ -207,7 +209,6 @@ export class ClientesService {
                     break;
                     
                 default:
-                    // console.log("Tipo de documento inexistente");
                     break;
 
             }
