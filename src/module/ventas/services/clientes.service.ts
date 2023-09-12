@@ -157,7 +157,6 @@ export class ClientesService {
         } else {
             switch (tipoDocumento) {
                 case "DNI":
-                    // const urlDNI:string = pedirDNI
                     let responseDNI:any;
                     try {
                         responseDNI = await axios.post(pedirDNI);
@@ -178,7 +177,6 @@ export class ClientesService {
                     break;
 
                 case "RUC":
-                    // const urlRUC:string = process.env.PEDIR_RUC;
                     let responseRUC:any;
 
                     try {
