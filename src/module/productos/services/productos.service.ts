@@ -250,7 +250,7 @@ export class ProductosService {
             rowIndex++;
         })
 
-        return wb.write('ExcelFile.xlsx', res);
+        return wb.write('RelacionProductos.xlsx', res);
 
     }
 
