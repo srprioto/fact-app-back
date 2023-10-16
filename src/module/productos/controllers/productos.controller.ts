@@ -9,7 +9,8 @@ import {
     Put, 
     Query, 
     UseGuards, 
-    DefaultValuePipe 
+    DefaultValuePipe,
+    Res
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Pagination } from 'nestjs-typeorm-paginate';
@@ -47,6 +48,8 @@ export class ProductosController {
         });
     }
 
+
+
     // @Roles(Role.ADMIN)
     // @Get("/todos")
     // getAll(){
@@ -76,6 +79,17 @@ export class ProductosController {
     @Post('search')
     searchData(@Body() payload:any){
         return this.productosService.searchData(payload.value);
+    }
+
+
+
+
+
+    @Get("descargar/excel")
+    getDescargarExcel(
+        @Res() res:any
+    ){
+        return this.productosService.descargarExcel(res);
     }
 
 }

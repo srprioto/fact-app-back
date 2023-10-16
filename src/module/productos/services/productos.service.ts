@@ -9,6 +9,8 @@ import { LocalesStock } from 'src/module/locales/entities/locales_stock.entity';
 import { Categorias } from '../entities/categorias.entity';
 import { Locales } from 'src/module/locales/entities/locales.entity';
 
+var xl = require('excel4node');
+
 
 @Injectable()
 export class ProductosService {
@@ -199,5 +201,58 @@ export class ProductosService {
         });
         return data;
     }
+
+
+
+    async descargarExcel(res:any){
+
+        const data = await this.productosRepo.find({
+            select: [
+                "codigo",
+                "nombre",
+                "marca",
+                "color",
+                "talla",
+                "precio_compra",
+                "precio_venta_1",
+                "precio_venta_2",
+                "precio_venta_3"
+            ]
+        });
+
+        const wb = new xl.Workbook();
+        const ws = wb.addWorksheet("nombre plantilla");
+
+        const titlesColumns = [
+            "Codigo",
+            "Nombre",
+            "Marca",
+            "Color",
+            "Talla",
+            "Precio de compra",
+            "Precio de venta 1",
+            "Precio de venta 2",
+            "Precio de venta 3"
+        ];
+
+        let handlerColumnIndex = 1; // añadir nombres de las columnas
+        titlesColumns.forEach(element => {
+            ws.cell(1, handlerColumnIndex++).string(element)
+        });
+
+
+        let rowIndex = 2;
+        data.forEach((record) => { 
+            let columnIndex = 1;
+            Object.keys(record).forEach((columnName) => { 
+                ws.cell(rowIndex, columnIndex++).string(record[columnName])
+            })
+            rowIndex++;
+        })
+
+        return wb.write('ExcelFile.xlsx', res);
+
+    }
+
 
 }
