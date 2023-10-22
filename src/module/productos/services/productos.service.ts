@@ -248,9 +248,9 @@ export class ProductosService {
                 ws.cell(rowIndex, columnIndex++).string(record[columnName])
             })
             rowIndex++;
-        })
+        }) 
 
-        return wb.write('RelacionProductos.xlsx', res);
+        wb.write('RelacionProductos.xlsx', res);
 
     }
 
