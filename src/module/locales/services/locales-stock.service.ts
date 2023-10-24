@@ -7,6 +7,9 @@ import { CreateLocalStockDto, UpdateLocalStockDto } from '../dtos/locales_stock.
 // import { Locales } from '../entities/locales.entity';
 import { LocalesStock } from '../entities/locales_stock.entity';
 import { Productos } from 'src/module/productos/entities/productos.entity';
+import { consulta } from 'src/assets/functions/queryBuilder';
+
+var xl = require('excel4node');
 
 
 @Injectable()
@@ -312,6 +315,62 @@ export class LocalesStockService {
         return {ok: "ok"}
 
     }
+
+
+    async descargarStockExcel(res:any, idLocal:number){
+
+        const stock:any = await consulta(`
+            SELECT
+                p.codigo,
+                p.nombre AS nombre_producto,
+                p.marca,
+                p.color,
+                p.talla,
+                p.precio_venta_1,
+                p.precio_venta_2,
+                p.precio_venta_3,
+                CAST(ls.cantidad AS CHAR) AS stock
+            FROM productos AS p
+            LEFT JOIN locales_stock AS ls ON p.id = ls.productosId
+            WHERE ls.localesId = ${idLocal}
+            ORDER BY ls.id desc;
+        `)
+
+        const wb = new xl.Workbook();
+        const ws = wb.addWorksheet("nombre plantilla");
+
+        const titlesColumns = [
+            "Codigo",
+            "Nombre",
+            "Marca",
+            "Color",
+            "Talla",
+            "Precio de venta 1",
+            "Precio de venta 2",
+            "Precio de venta 3",
+            "Stock"
+        ];
+
+        let handlerColumnIndex = 1; // añadir nombres de las columnas
+        titlesColumns.forEach(element => {
+            ws.cell(1, handlerColumnIndex++).string(element)
+        });
+
+
+        let rowIndex = 2;
+        stock.forEach((record) => { 
+            let columnIndex = 1;
+            Object.keys(record).forEach((columnName) => { 
+                ws.cell(rowIndex, columnIndex++).string(record[columnName])
+            })
+            rowIndex++;
+        }) 
+
+        wb.write('StockProductos.xlsx', res);
+
+    }
+
+
 
 }
 

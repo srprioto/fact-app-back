@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, DefaultValuePipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, DefaultValuePipe, Res } from '@nestjs/common';
 import { Pagination } from 'nestjs-typeorm-paginate';
 
 import { CreateLocalStockDto, UpdateLocalStockDto } from '../dtos/locales_stock.dto';
@@ -73,6 +73,12 @@ export class LocalesStockController {
     @Post('locales/search/:id')
     searchLocales(@Body() payload:any, @Param('id', ParseIntPipe) id:number){
         return this.localesStockService.searchLocales(id, payload.value);
+    }
+
+
+    @Get("descargar/excel/:id")
+    getDescargarExcel(@Res() res:any, @Param('id', ParseIntPipe) id:number){
+        return this.localesStockService.descargarStockExcel(res, id);
     }
 
 
