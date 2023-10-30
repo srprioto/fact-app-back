@@ -9,7 +9,8 @@ import {
     Put, 
     Query, 
     // UseGuards, 
-    DefaultValuePipe 
+    DefaultValuePipe,
+    Res
 } from '@nestjs/common';
 import { Pagination } from 'nestjs-typeorm-paginate';
 
@@ -72,6 +73,15 @@ export class MovimientosController {
     @Post('search')
     searchData(@Body() payload:any){
         return this.movimientosService.searchData(payload.value);
+    }
+
+
+    @Get("descargar/excel/:id")
+    getDescargarExcelIngresoProductos(
+        @Res() res:any,
+        @Param('id', ParseIntPipe) id:number
+    ){
+        return this.movimientosService.descargarExcelIngresoProductos(res, id);
     }
 
 
