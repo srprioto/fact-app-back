@@ -143,7 +143,8 @@ export class ClientesService {
         const { documento, tipoDocumento } = payload;
         let response:clienteDto = {...cliente};
 
-        const pedirDNI:string = 'https://ww1.sunat.gob.pe/ol-ti-itatencionf5030/registro/solicitante?tipDocu=1&numDocu=' + documento + '&tipPers=""'
+        // const pedirDNI:string = 'https://ww1.sunat.gob.pe/ol-ti-itatencionf5030/registro/solicitante?tipDocu=1&numDocu=' + documento + '&tipPers=""'
+        const pedirDNI:string = 'https://api.apis.net.pe/v1/dni?numero=' + documento
         const pedirRUC:string = 'https://incared.com/api/apirest'
 
         const clienteExistente:clienteDto = await this.clientesRepo.findOne({
@@ -161,7 +162,7 @@ export class ClientesService {
                 case "DNI":
                     let responseDNI:any;
                     try {
-                        responseDNI = await axios.post(pedirDNI);
+                        responseDNI = await axios.get(pedirDNI);
                         responseDNI = responseDNI.data;
                     } catch (error) {
                         console.log(error);
@@ -173,7 +174,8 @@ export class ClientesService {
                         response.estadoCliente = "Nuevo";
                         response.numero_documento = documento;
                         response.tipoDocumento = "DNI";
-                        response.nombre = responseDNI.apePatSoli + " " + responseDNI.apeMatSoli + " " + responseDNI.nombreSoli;
+                        // response.nombre = responseDNI.apePatSoli + " " + responseDNI.apeMatSoli + " " + responseDNI.nombreSoli;
+                        response.nombre = responseDNI.nombre;
                     }
 
                     break;

@@ -155,9 +155,6 @@ export class MovimientosService {
         const data = await this.movimientosRepo.findOne(id,{
             relations: ["locales", "movimientoDetalles", "movimientoDetalles.productos", "movimientoDetalles.proveedores"]
         });
-        
-        console.log(data);
-        
 
         let exportar:Array<any> = [];
 
@@ -239,7 +236,7 @@ export class MovimientosService {
             filaInicioIteracion++;
         }) 
 
-        wb.write(`Registro Ingresos ${fechaCompletaActualJs(data.created_at)}.xlsx`, res);
+        wb.write(`Registro Ingresos.xlsx`, res);
 
     }
 
