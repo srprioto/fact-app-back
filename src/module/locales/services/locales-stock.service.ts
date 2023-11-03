@@ -182,12 +182,10 @@ export class LocalesStockService {
 
     
     // locales o tiendas
-    async getLocales(idLocal:number, options: IPaginationOptions):Promise<Pagination<LocalesStock>>{
+    async getLocales(idLocal:number, orden:"ASC" | "DESC" | 1 | -1, options: IPaginationOptions):Promise<Pagination<LocalesStock>>{
         return paginate<LocalesStock>(this.localesStockRepo, options, {
-            relations: [
-                "productos"
-            ],
-            order: { updated_at: "DESC" },
+            relations: [ "productos" ],
+            order: { cantidad: orden },
             where: { locales: idLocal }
         });
     }

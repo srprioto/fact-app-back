@@ -55,19 +55,19 @@ export class LocalesStockController {
     }
 
     // locales
-    @Get("locales/:id")
+    @Get("locales/:id/:orden")
     async getLocales( // ok
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
-        @Param('id', ParseIntPipe) id:number
+        @Param('id', ParseIntPipe) id:number,
+        @Param('orden') orden:"ASC" | "DESC" | 1 | -1
     ): Promise<Pagination<LocalesStock>> {
         limit = limit > 100 ? 100 : limit;
-
-        return this.localesStockService.getLocales(id, {
-            page,
-            limit,
-            route: `/locales-stock/locales/${id}`
-        });
+        return this.localesStockService.getLocales(
+            id, 
+            orden,
+            { page, limit, route: `/locales-stock/locales/${id}/${orden}` }
+        );
     }
 
     @Post('locales/search/:id')
