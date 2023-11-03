@@ -11,14 +11,20 @@ export class IngresosEgresosController {
         private ingresosEgresosService:IngresosEgresosService
     ){}
 
-    @Get("paginate/:idLocal")
+    @Get("paginate/:idLocal/:fechaInicio/:fechaFin")
     async index(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page:number = 1,
         @Query('limit', new DefaultValuePipe(12), ParseIntPipe) limit:number = 12,
-        @Param('idLocal') idLocal:string
+        @Param('idLocal') idLocal:string,
+        @Param('fechaInicio') fechaInicio:string,
+        @Param('fechaFin') fechaFin:string
     ):Promise<Pagination<IngresosEgresos>> {
         limit = limit > 100 ? 100 : limit;
-        return this.ingresosEgresosService.paginate(idLocal, { page, limit, route: `/ingresos-egresos/paginate/${idLocal}` });
+        return this.ingresosEgresosService.paginate(
+            idLocal, 
+            {fechaInicio, fechaFin}, 
+            { page, limit, route: `/ingresos-egresos/paginate/${idLocal}/${fechaInicio}/${fechaFin}`}
+        );
     }
 
 
