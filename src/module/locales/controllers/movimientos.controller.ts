@@ -84,5 +84,11 @@ export class MovimientosController {
         return this.movimientosService.descargarExcelIngresoProductos(res, id);
     }
 
+    @Post("reportes")
+    getReabastecimientoReportes(@Body() payload:any){
+        return this.movimientosService.reabastecimientoReportes(payload);
+    }
+
+
 
 }

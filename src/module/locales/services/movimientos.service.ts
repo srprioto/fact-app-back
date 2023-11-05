@@ -15,6 +15,7 @@ import { Movimientos } from '../entities/movimientos.entity';
 import { MovimientoDetallesService } from './movimiento-detalles.service';
 import { TransaccionesService } from './transacciones.service';
 import { fechaCompletaActualJs } from 'src/assets/functions/fechas';
+import { consulta } from 'src/assets/functions/queryBuilder';
 
 var xl = require('excel4node');
 
@@ -198,7 +199,7 @@ export class MovimientosService {
         ws.cell(5, 1).string('Total:');
         ws.cell(5, 2).string(data.total);
         
-        ws.cell(6, 1).string('Ocservaciones:');
+        ws.cell(6, 1).string('Observaciones:');
         ws.cell(6, 2).string(data.observaciones);
         
         ws.cell(7, 1).string('Fecha de ingreso:');
@@ -240,7 +241,86 @@ export class MovimientosService {
 
     }
 
+
+    async reabastecimientoReportes(payload:any){
+
+        const { local, fechas }:any = payload;
+        let whereSumatoria:string = `where 1 = 1 `;
+        let whereTotalComprado:string = `where 1 = 1 `;
+
+        if (local !== 0) {
+            whereSumatoria += `AND localesId = ${local}`
+            whereTotalComprado += `AND m.localesId = ${local}`;
+        }
+
+        if (fechas.inicio !== "_" || fechas.fin !== "_") {
+            whereSumatoria += `
+                AND created_at 
+                    BETWEEN STR_TO_DATE('${fechas.inicio}', '%Y-%m-%dT%H:%i:%s.%f') 
+                    AND STR_TO_DATE('${fechas.fin}', '%Y-%m-%dT%H:%i:%s.%f')
+            `
+            whereTotalComprado += `
+                AND m.created_at 
+                    BETWEEN STR_TO_DATE('${fechas.inicio}', '%Y-%m-%dT%H:%i:%s.%f')
+                    AND STR_TO_DATE('${fechas.fin}', '%Y-%m-%dT%H:%i:%s.%f')
+            `;
+        }
+
+        const sumatorias:any = await consulta(`
+            SELECT
+                SUM(total) AS suma_total,
+                SUM(costo_otros) AS suma_costo_otros,
+                SUM(costo_transporte) AS suma_costo_transporte,
+                SUM(subtotal) AS suma_subtotal
+            FROM movimientos
+            ${whereSumatoria}
+        `);
+
+
+        const total_comprado:any = await consulta(`
+            SELECT
+                CONCAT(p.nombre, ' - ', p.talla, ' - ', p.marca) AS producto,
+                SUM(md.cantidad) AS total_adquirido
+            FROM movimiento_detalles md
+            JOIN productos p ON md.productosId = p.id
+            JOIN movimientos m ON md.movimientosId = m.id
+            ${whereTotalComprado}
+            GROUP BY p.id
+            ORDER BY total_adquirido DESC
+            LIMIT 10;
+        `);
+
+
+        return {
+            sumatorias: sumatorias,
+            total_comprado: total_comprado
+        }
+
+    }
+
+
 }
+
+
+// SELECT
+//     p.codigo AS codigo,
+//     p.nombre AS nombre_producto,
+//     p.marca AS marca_producto,
+//     p.color AS color_producto,
+//     p.talla AS talla_producto,
+//     SUM(md.cantidad) AS total_adquirido,
+//     SUM(md.precio_parcial) AS precio_compra_total
+// FROM movimiento_detalles md
+// JOIN productos p ON md.productosId = p.id
+// JOIN movimientos m ON md.movimientosId = m.id
+// WHERE m.created_at 
+//     BETWEEN '2023-10-01' AND '2023-10-31'
+//     AND m.localesId = 2
+// GROUP BY p.id
+// ORDER BY total_adquirido DESC;
+
+
+
 
 
 // let localStockid:number;
