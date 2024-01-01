@@ -296,28 +296,30 @@ export class MovimientosService {
             total_comprado: total_comprado
         }
 
+        // SELECT
+        //     p.codigo AS codigo,
+        //     p.nombre AS nombre_producto,
+        //     p.marca AS marca_producto,
+        //     p.color AS color_producto,
+        //     p.talla AS talla_producto,
+        //     SUM(md.cantidad) AS total_adquirido,
+        //     SUM(md.precio_parcial) AS precio_compra_total
+        // FROM movimiento_detalles md
+        // JOIN productos p ON md.productosId = p.id
+        // JOIN movimientos m ON md.movimientosId = m.id
+        // WHERE m.created_at 
+        //     BETWEEN '2023-10-01' AND '2023-10-31'
+        //     AND m.localesId = 2
+        // GROUP BY p.id
+        // ORDER BY total_adquirido DESC;
+
     }
 
 
 }
 
 
-// SELECT
-//     p.codigo AS codigo,
-//     p.nombre AS nombre_producto,
-//     p.marca AS marca_producto,
-//     p.color AS color_producto,
-//     p.talla AS talla_producto,
-//     SUM(md.cantidad) AS total_adquirido,
-//     SUM(md.precio_parcial) AS precio_compra_total
-// FROM movimiento_detalles md
-// JOIN productos p ON md.productosId = p.id
-// JOIN movimientos m ON md.movimientosId = m.id
-// WHERE m.created_at 
-//     BETWEEN '2023-10-01' AND '2023-10-31'
-//     AND m.localesId = 2
-// GROUP BY p.id
-// ORDER BY total_adquirido DESC;
+
 
 
 

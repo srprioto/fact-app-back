@@ -132,7 +132,8 @@ export class ComprobanteService {
         const data:any = await this.comprobanteRepo.findOne(id,{
             relations: ["clientes", "locales", "comprobanteDetalles", "ventas", "correlativos"]
         });
-
+        console.log(data);
+        
         const resSunat = JSON.parse(data.respuesta_sunat)
         data.respuesta_sunat = resSunat;
 
