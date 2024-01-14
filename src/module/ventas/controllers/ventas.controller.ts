@@ -101,10 +101,10 @@ export class VentasController {
         return this.ventasService.habilitarVenta(id, payload);
     }
 
-    @Get('usuario_ventas/:id')
-    getVentasDelUsuario(@Param('id', ParseIntPipe) id:number){
-        return this.ventasProviderService.ventasDelUsuario(id);
-    }
+    // @Get('usuario_ventas/:id')
+    // getVentasDelUsuario(@Param('id', ParseIntPipe) id:number){
+    //     return this.ventasProviderService.ventasDelUsuario(id);
+    // }
 
     @Post('usuario/paginate/:id')
     postVentasUsuarioPaginate(@Body() payload:any, @Param('id') id:number){

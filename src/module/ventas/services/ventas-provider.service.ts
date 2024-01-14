@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository, Like, Between } from 'typeorm';
 // import { CajaService } from 'src/module/locales/services/caja.service';
 import { Ventas } from '../entities/ventas.entity';
 // import { Caja } from 'src/module/locales/entities/caja.entity';
@@ -12,6 +12,8 @@ import { tipoMovimiento } from 'src/module/locales/dtos/caja-detalles.dto';
 import { IngresosVentas } from '../entities/ingresos-ventas.entity';
 import { LocalesStockService } from 'src/module/locales/services/locales-stock.service';
 import { paginacionOrm } from 'src/assets/functions/paginacion';
+import { fechaInicioFinMes } from 'src/assets/functions/fechas';
+import { consulta } from 'src/assets/functions/queryBuilder';
 
 @Injectable()
 export class VentasProviderService {
@@ -103,17 +105,17 @@ export class VentasProviderService {
     }
 
 
-    async ventasDelUsuario(id:number){
-        const data:any = await this.ventasRepo.find({
-            relations: ["ventaDetalles", "ventaDetalles.productos"],
-            where: {usuarios: id}
-        });
+    // async ventasDelUsuario(id:number){
+    //     const data:any = await this.ventasRepo.find({
+    //         relations: ["ventaDetalles", "ventaDetalles.productos"],
+    //         where: {usuarios: id}
+    //     });
 
-        return {
-            success: "informacion correcta",
-            data: data
-        }
-    }
+    //     return {
+    //         success: "informacion correcta",
+    //         data: data
+    //     }
+    // }
 
     async ventasUsuarioPaginate(payload:any, id:number){
 
@@ -122,28 +124,81 @@ export class VentasProviderService {
             where: {usuarios: id}
         });
 
-        // busquedas
-        // let where:any = [];
-        // if (!!payload.searchText) {
-        //     where = [
-        //         { nombre: Like(`%${payload.searchText}%`), tipo: "personal" },
-        //         { documento: Like(`%${payload.searchText}%`), tipo: "personal" }
-        //     ]
-        // } else {
-        //     where = { tipo: "personal" };
-        // }
+        const inicio:string = payload.fechas.inicio;
+        const fin:string = payload.fechas.fin;
 
-        const resto:any = paginacionOrm(this.ventasRepo, {
+        const where:any = {usuarios: id};
+        let filtroFechas:string = "";
+
+        if (inicio !== "_" || fin !== "_" ) {
+            where.created_at = Between(inicio, fin);
+            filtroFechas = `AND VENTAS.created_at BETWEEN '${inicio}' AND '${fin}'`
+        }
+
+        // lista total ventas usuarios
+        const resto:any = await paginacionOrm(this.ventasRepo, {
             relations: ["ventaDetalles", "ventaDetalles.productos"],
-            where: {usuarios: id},
+            where: where,
             pagina: payload.pagina,
         });
 
-        return resto;
+
+        // respuestas especificas
+        // consultas
+        const queryTotalDineroVendido:string = `
+            SELECT SUM(VENTAS.total) AS total_vendido
+            FROM VENTAS
+            WHERE VENTAS.usuariosId = ${id} ${filtroFechas};
+        `;
+
+
+        const queryTotalProdVendidos:string = `
+            SELECT
+                SUM(cantidad_venta) AS total_vendido
+            FROM VENTA_DETALLES
+            JOIN VENTAS ON VENTA_DETALLES.ventasId = VENTAS.id
+            WHERE VENTAS.usuariosId = ${id} ${filtroFechas};
+        `;
+
+
+        const queryTopVendido:string = `
+        SELECT
+            CONCAT(PRODUCTOS.nombre, ' - ', PRODUCTOS.marca, ' - ', PRODUCTOS.talla, ' - ', PRODUCTOS.color) AS name,
+            SUM(VENTA_DETALLES.cantidad_venta) AS total_vendido,
+            SUM(VENTA_DETALLES.precio_parcial) AS valor_venta_total
+        FROM VENTA_DETALLES
+        JOIN VENTAS ON VENTA_DETALLES.ventasId = VENTAS.id
+        JOIN PRODUCTOS ON VENTA_DETALLES.productosId = PRODUCTOS.id
+        WHERE 
+            VENTAS.usuariosId = ${id} ${filtroFechas}
+        GROUP BY PRODUCTOS.id
+        ORDER BY total_vendido DESC
+        LIMIT 10;
+    `;
+
+
+        // query builder
+        const totalDineroVendido:Promise<any> = await consulta(queryTotalDineroVendido);
+        const totalProdVendidos:Promise<any> = await consulta(queryTotalProdVendidos);
+        const topProducVendidos:any = await consulta(queryTopVendido);
+
+
+        const convTopProductosVendidos = topProducVendidos.map(obj => ({
+            ...obj,
+            total_vendido: Number(obj.total_vendido),
+        }));
+
+
+        return {
+            resto: resto,
+            detalles: {
+                totalDineroRecaudado: totalDineroVendido[0].total_vendido,
+                totalProductosVendidos: totalProdVendidos[0].total_vendido,
+                topProductosVendidos: convTopProductosVendidos
+            }
+        };
 
     }
-
-
 
 }
 
@@ -167,3 +222,23 @@ export class VentasProviderService {
 //         usuarioId: usuarioId
 //     });
 // }
+
+
+// 2024-01-12T00:00:00.000-05:00
+// 2024-01-13T23:59:59.999-05:00
+
+
+
+
+// busquedas
+// let where:any = [];
+// if (!!payload.searchText) {
+//     where = [
+//         { nombre: Like(`%${payload.searchText}%`), tipo: "personal" },
+//         { documento: Like(`%${payload.searchText}%`), tipo: "personal" }
+//     ]
+// } else {
+//     where = { tipo: "personal" };
+// }
+
+
