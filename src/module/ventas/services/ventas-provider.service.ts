@@ -162,19 +162,19 @@ export class VentasProviderService {
 
 
         const queryTopVendido:string = `
-        SELECT
-            CONCAT(productos.nombre, ' - ', productos.marca, ' - ', productos.talla, ' - ', productos.color) AS name,
-            SUM(venta_detalles.cantidad_venta) AS total_vendido,
-            SUM(venta_detalles.precio_parcial) AS valor_venta_total
-        FROM venta_detalles
-        JOIN ventas ON venta_detalles.ventasId = ventas.id
-        JOIN productos ON venta_detalles.productosId = productos.id
-        WHERE 
-            ventas.usuariosId = ${id} ${filtroFechas}
-        GROUP BY productos.id
-        ORDER BY total_vendido DESC
-        LIMIT 10;
-    `;
+            SELECT
+                CONCAT(productos.nombre, ' - ', productos.marca, ' - ', productos.talla, ' - ', productos.color) AS name,
+                SUM(venta_detalles.cantidad_venta) AS total_vendido,
+                SUM(venta_detalles.precio_parcial) AS valor_venta_total
+            FROM venta_detalles
+            JOIN ventas ON venta_detalles.ventasId = ventas.id
+            JOIN productos ON venta_detalles.productosId = productos.id
+            WHERE 
+                ventas.usuariosId = ${id} ${filtroFechas}
+            GROUP BY productos.id
+            ORDER BY total_vendido DESC
+            LIMIT 10;
+        `;
 
 
         // query builder
