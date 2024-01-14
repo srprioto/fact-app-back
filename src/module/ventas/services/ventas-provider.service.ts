@@ -132,7 +132,7 @@ export class VentasProviderService {
 
         if (inicio !== "_" || fin !== "_" ) {
             where.created_at = Between(inicio, fin);
-            filtroFechas = `AND VENTAS.created_at BETWEEN '${inicio}' AND '${fin}'`
+            filtroFechas = `AND ventas.created_at BETWEEN '${inicio}' AND '${fin}'`
         }
 
         // lista total ventas usuarios
@@ -146,32 +146,32 @@ export class VentasProviderService {
         // respuestas especificas
         // consultas
         const queryTotalDineroVendido:string = `
-            SELECT SUM(VENTAS.total) AS total_vendido
-            FROM VENTAS
-            WHERE VENTAS.usuariosId = ${id} ${filtroFechas};
+            SELECT SUM(ventas.total) AS total_vendido
+            FROM ventas
+            WHERE ventas.usuariosId = ${id} ${filtroFechas};
         `;
 
 
         const queryTotalProdVendidos:string = `
             SELECT
                 SUM(cantidad_venta) AS total_vendido
-            FROM VENTA_DETALLES
-            JOIN VENTAS ON VENTA_DETALLES.ventasId = VENTAS.id
-            WHERE VENTAS.usuariosId = ${id} ${filtroFechas};
+            FROM venta_detalles
+            JOIN ventas ON venta_detalles.ventasId = ventas.id
+            WHERE ventas.usuariosId = ${id} ${filtroFechas};
         `;
 
 
         const queryTopVendido:string = `
         SELECT
-            CONCAT(PRODUCTOS.nombre, ' - ', PRODUCTOS.marca, ' - ', PRODUCTOS.talla, ' - ', PRODUCTOS.color) AS name,
-            SUM(VENTA_DETALLES.cantidad_venta) AS total_vendido,
-            SUM(VENTA_DETALLES.precio_parcial) AS valor_venta_total
-        FROM VENTA_DETALLES
-        JOIN VENTAS ON VENTA_DETALLES.ventasId = VENTAS.id
-        JOIN PRODUCTOS ON VENTA_DETALLES.productosId = PRODUCTOS.id
+            CONCAT(productos.nombre, ' - ', productos.marca, ' - ', productos.talla, ' - ', productos.color) AS name,
+            SUM(venta_detalles.cantidad_venta) AS total_vendido,
+            SUM(venta_detalles.precio_parcial) AS valor_venta_total
+        FROM venta_detalles
+        JOIN ventas ON venta_detalles.ventasId = ventas.id
+        JOIN productos ON venta_detalles.productosId = productos.id
         WHERE 
-            VENTAS.usuariosId = ${id} ${filtroFechas}
-        GROUP BY PRODUCTOS.id
+            ventas.usuariosId = ${id} ${filtroFechas}
+        GROUP BY productos.id
         ORDER BY total_vendido DESC
         LIMIT 10;
     `;
