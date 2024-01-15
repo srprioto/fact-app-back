@@ -82,6 +82,14 @@ export class LocalesStockController {
     }
 
 
+
+    
+    @Get('informacion/:id')
+    getInfoLocalStock(@Param('id', ParseIntPipe) id:number){
+        return this.localesStockService.infoLocalStock(id);
+    }
+
+
     // @Post('fullstock/stock') // añade productos en cadena
     // fullStock(@Body() payload:any){
     //     return this.localesStockService.anadirFullProd(payload);

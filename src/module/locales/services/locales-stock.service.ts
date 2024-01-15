@@ -8,6 +8,7 @@ import { CreateLocalStockDto, UpdateLocalStockDto } from '../dtos/locales_stock.
 import { LocalesStock } from '../entities/locales_stock.entity';
 import { Productos } from 'src/module/productos/entities/productos.entity';
 import { consulta } from 'src/assets/functions/queryBuilder';
+import { Locales } from '../entities/locales.entity';
 
 var xl = require('excel4node');
 
@@ -17,7 +18,7 @@ export class LocalesStockService {
     constructor(
         @InjectRepository(LocalesStock) private localesStockRepo:Repository<LocalesStock>,
         @InjectRepository(Productos) private productosRepo:Repository<Productos>,
-        // @InjectRepository(Locales) private localesRepo:Repository<Locales>,
+        @InjectRepository(Locales) private localesRepo:Repository<Locales>,
     ){ }
 
     async getAll(){
@@ -369,6 +370,35 @@ export class LocalesStockService {
     }
 
 
+    // procesado de informacion
+    async infoLocalStock(id:number){
+
+        const local = await this.localesRepo.findOne(id);
+
+        const queryValorTotalStock:string = `
+            SELECT
+                SUM(valorizacion_por_producto) AS valor_total_local
+            FROM (
+                SELECT
+                    SUM(locales_stock.cantidad * productos.precio_compra) AS valorizacion_por_producto
+                FROM locales_stock
+                JOIN productos ON locales_stock.productosId = productos.id
+                WHERE locales_stock.localesId = ${id}
+                GROUP BY productos.id, productos.nombre
+            ) AS subconsulta;
+        `;
+
+        const valorTotalStock:any = await consulta(queryValorTotalStock);
+
+        return {
+            success: "Producto encontrado",
+            data: {
+                valorTotalStock: valorTotalStock[0].valor_total_local,
+                nombreLocal: local.nombre
+            },
+        }
+        
+    }
 
 }
 
